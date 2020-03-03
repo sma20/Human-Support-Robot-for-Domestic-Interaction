@@ -1,0 +1,17 @@
+"""
+find_frontier A* strategy taken from: https://github.com/bnurbekov/Turtlebot_Navigation
+
+modifications to fit hsr (no more A* strategy, object detection incorporated into the dynamic movement) made by my-name-is-D .
+Note: in the case of the hsr, could be ameliorated in term of optimisation/time by removing useless parts linked to the previous utilisation. 
+
+"""
+
+This package map autonomously the environnment. A bit slow.
+
+
+There is now no A* strategy, no need with the /goal action of the hsr which also includes obstacle avoidance.
+The map is recorded with hector map but it could also be done with gmapping (see launch file, the gmapping part is commented)
+
+
+The map has to be saved manually:
+rosrun map_server map_saver -f mymap
