@@ -1,3 +1,5 @@
+--READ ME of  https://github.com/bnurbekov/Turtlebot_Navigation --
+
 Synopsis
 ========
 This project implements a Software system for navigation and frontier based exploration for mobile robotic platforms (Turtlebots).
