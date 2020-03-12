@@ -15,7 +15,7 @@ audio = record = aup = None
 
 action = [[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
 
-area = [ 'bedroom', 'livingroom', 'bathroom','toilet','shower-roon','rest-room' 'sleeping-room', 'kitchen' ]
+area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen' ]
 nouns = []
 verbs = []
 synonyms = []
@@ -84,6 +84,24 @@ if __name__ == '__main__':
         text = text.replace('living', 'livingroom')
 
     print(text)
+
+    """if 'shower' in text:
+        text = text.replace('room','')
+        text = text.replace('shower', 'showerroom')
+
+    print(text)
+
+    if 'rest' in text:
+        text = text.replace('room','')
+        text = text.replace('rest', 'restroom')
+
+    print(text)
+
+    if 'sleeping' in text:
+        text = text.replace('room','')
+        text = text.replace('sleeping', 'sleepingroom')
+
+    print(text)"""
 
     #rospy.spin(10)
 
@@ -208,7 +226,7 @@ if __name__ == '__main__':
                         pass
                     break
                 elif tc[1] == a[1]:
-                    
+
                     if tc[0] in area:
                         print("do the action " , tc, "to/from", tc[0])
                         t = "do the action ,"+  str(tc)+ "to/from, "+ str(tc[0])
