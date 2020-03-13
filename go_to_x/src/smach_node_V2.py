@@ -11,11 +11,28 @@ from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
 from std_msgs.msg import Bool
 # define state Foo
 
+poseX=0
+poseY=0
+POS_TOLERANCE=0.02
 
+
+#----------------------- ODOM FUNCTIONS -------------------
+
+def call_pose():
+    """to call the odometry"""
+    sub = rospy.Subscriber('/hsrb/odom', Odometry, getPose)
+
+def getPose(msg):
+    """to get all the pose we need as global, could be done with a return, but well"""
+    global poseX
+    global poseY
+
+    poseX,poseY=msg.pose.pose.position.x,msg.pose.pose.position.y
+    
 
 #----------------------- ACTIONS machine class ----------------------------------
 
-#qpace for improvement, could replace the string by functions here (maybe to check if that is the wanted action)
+#space for improvement, could replace the string by functions here (maybe to check if that is the wanted action)
 def switch_actions(action_choice):
     switcher={
             1:'get',
@@ -25,7 +42,6 @@ def switch_actions(action_choice):
     result=switcher.get(action_choice,"nothing")
     return result
     
-
 
 
 #Here we choose which action will be executed. maybe add a verification check with the user here
@@ -117,7 +133,7 @@ class search_closest_position(smach.State):
 
 
 # To create: a function that search in a file an object name and retrieve its position as a point       
-# parameters to enter: 
+# parameters to enter: object, room (or home if any)
 # outputs: a position x,y,z as a point
 
 #TO DETERMINE: will we need to give the object name as this state is called? 
@@ -138,14 +154,76 @@ class retrieve_position_object(smach.State):
 #(repeat the action a number of time, after a number of try: STOP. If object found: END)
 
 
-#tested in test_launch, test again when we have the objects file
-"""
+#Search goals in the room/home to send to the move action.
+#
 class search_map(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['success','failure'])#,input_keys=['name_object']) #For the upgraded version
     
     
     def execute(self,userdata):
+        global poseX
+        global poseY
+        global POS_TOLERANCE
+        rospy.loginfo('Executing get goals to search room , service on?')
+        try:
+            rospy.wait_for_service('/identify_goals')# Wait for the service to be running (with launch file)
+            find_goals_service = rospy.ServiceProxy('/identify_goals',find_goals) # Create connection to service
+            find_goals_request = find_goalsRequest() # Create an object of type EmptyRequest
+        except rospy.ServiceException, e:
+            print ("Service get goals to search room failed: %s"%e)
+
+        rospy.loginfo('Executing service ')
+        find_goals_request.start_check=True
+        find_goals_request.room="kitchen"
+        response_goals= find_goals_service(find_goals_request)
+
+        print(response_goals)
+        rospy.loginfo('Executing state move')
+        try:
+            rospy.wait_for_service('/move_robot_to_goal')# Wait for the service to be running (with launch file)
+            move_to_goal = rospy.ServiceProxy('/move_robot_to_goal', my_goal) # Create connection to service
+            move_request_object = my_goalRequest() # Create an object of type EmptyRequest
+        except rospy.ServiceException, e:
+            print ("Service call move_robot_to_goal failed: %s"%e)
+
+       
+        for i in range(len(response_goals.goals_to_reachx)):   
+            
+            call_pose()        
+            move_request_object.x_goal=response_goals.goals_to_reachx[i]
+            move_request_object.y_goal=response_goals.goals_to_reachy[i]
+
+            response_move = move_to_goal(move_request_object)
+            initialDistance = math.sqrt((response_goals.goals_to_reachx[i] - poseX)**2 + (response_goals.goals_to_reachy[i] - poseY)**2)
+            initial_x = poseX
+            initial_y = poseY
+
+            if response_move.success==True:
+                print("moved successfully")
+                while ((poseX > response_goals.goals_to_reachx[i] + POS_TOLERANCE or poseX < response_goals.goals_to_reachx[i] - POS_TOLERANCE) \
+                    or (poseY > response_goals.goals_to_reachy[i] + POS_TOLERANCE or poseY < response_goals.goals_to_reachy[i] - POS_TOLERANCE)) \
+                    and not math.sqrt((poseX - initial_x)**2 + (poseY - initial_y)**2) > initialDistance :
+                    call_pose()
+                    """
+                    if speech topic receive stop than exit with a return stop
+                    """
+                    """
+                    check if execution too long, for that recuperate the code i wrote in search map package
+                    """
+            else:
+                print("error")
+                #break
+            
+
+
+
+        #Then here we need to check each goal and chack if the "stop" command is being issued while moving
+        #We can use odom to be sure we don't set a new goal too early
+        #plan on repeating the move service again an again here
+        #the roslaunch has been tested in test_launch, test again when we have the objects file
+
+        """ First Test, may be usefull later
         rospy.init_node('search_map', anonymous=True)
         rospy.Subscriber("fake_pub", Bool, callback) #change it with the real topic
 
@@ -162,10 +240,9 @@ class search_map(smach.State):
         # 5min later
         rospy.loginfo("CLOOOOOSE LAUNCH")
         launch.shutdown()
-
+        """
         
 
-"""
 #----------------------------- END SUB_GET CLASS ------------------------------------------
 
 #---------------------------- SUB_FIND State machine classes -----------------------------------------------------------------

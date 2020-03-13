@@ -1,5 +1,5 @@
 <launch>
-    <arg name="map_file" value="/home/cata/hsr_ws2/src/go_to_x/map_tests/hector_first_lab_map.yaml"></arg>
+    <arg name="map_file" value="/home/cata/hsr_ws2/src/go_to_x/map_tests/my_hw_map_changed.yaml"></arg>
     <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)"></node>
 
     <node pkg="go_to_x" type="set_goal_v3.py" name="set_closest_goal" output="screen"> </node>

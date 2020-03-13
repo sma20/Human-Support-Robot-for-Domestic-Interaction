@@ -1,0 +1,7 @@
+bool start_check
+string room
+---
+float32[] goals_to_reachx
+float32[] goals_to_reachy
+
+

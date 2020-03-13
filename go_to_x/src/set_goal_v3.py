@@ -511,7 +511,7 @@ def convertCellToPoint(x,y, cellOrigin, resolution):
 
     return posx, posy
 
-
+"""
 # Convert the unit of a map from pixel to m
 # cell_size represents the number of pixel that form a cell (ex: if a cell is composed of 8x8 pixels, cell_size = 8) 
 def convert_px_to_xy(x_px,y_px):
@@ -546,7 +546,7 @@ def getOccupiedCells(grid):
 	return x,y
 
 
-
+"""
 def getPose(msg):
 	global poseX
 	global poseY
