@@ -1,9 +1,10 @@
 #! /usr/bin/env python
-
+#NOTE: if using an action to move REAL ROBOT. need to do "initialization self-position of the robot"
 import rospy
 import math as math
 from geometry_msgs.msg import PoseStamped, Quaternion, Point, Twist 
 from nav_msgs.msg import Odometry
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
 from go_to_x.srv import my_goal, my_goalResponse
 
@@ -68,6 +69,13 @@ def new_hsr_function(destination_x,destination_y):
     global POS_TOLERANCE
     global poseX
     global poseY
+
+    # initialize action client
+    cli = actionlib.SimpleActionClient('/move_base/move', MoveBaseAction)
+    # wait for the action server to establish connection
+    cli.wait_for_server()
+
+
     goal_begin=PoseStamped()
     
     initialDistance = math.sqrt((destination_x - poseX)**2 + (destination_y - poseY)**2)
@@ -85,37 +93,23 @@ def new_hsr_function(destination_x,destination_y):
     goal_begin.pose.position=Point(destination_x,destination_y, 0)
     quat = quaternion_from_euler(0, 0, destination_angle)
     goal_begin.pose.orientation = Quaternion(*quat)
-    publish_in_cmd(goal_begin)
-    goodTermination=True
-    i=0
-    """
-    while ((current_x > destination_x + POS_TOLERANCE or current_x < destination_x - POS_TOLERANCE) \
-        or (current_y > destination_y + POS_TOLERANCE or current_y < destination_y - POS_TOLERANCE)) \
-        and not math.sqrt((current_x - initial_x)**2 + (current_y - initial_y)**2) > initialDistance :
-        i+=1
-        if i>120000000:
+    
+    goal = MoveBaseGoal()
+    goal.target_pose = goal_begin
 
-            print("too long, stop action goal")
-            goal_begin.header.stamp = rospy.Time.now()
-            goal_begin.header.frame_id = "map"
-            goal_begin.pose.position=Point(current_x,current_y, 0)
-            quat = quaternion_from_euler(0, 0, current_theta)
-            goal_begin.pose.orientation = Quaternion(*quat)
+    # send message to the action server
+    cli.send_goal(goal)
 
-            publish_in_cmd(goal_begin)
-            goodTermination=False
-            break 
-    """           
-    """
-    if (now-begin> 3000):
-        abnormalTermination=True
-        break
-    """
-        
+    # wait for the action server to complete the order
+    cli.wait_for_result()
 
-        #self.publishTwist(speed, feed)
-    print ("goal launched in action")
-    rate.sleep()
+    # print result of navigation
+    action_state = cli.get_state()
+    if action_state == GoalStatus.SUCCEEDED:
+        goodTermination=True
+        print("goal reached")
+    
+
     return goodTermination
 
 
@@ -125,24 +119,3 @@ my_service = rospy.Service('/move_robot_to_goal', my_goal , my_callback)
 rospy.loginfo("MOVE_ROBOT Service Ready")
 
 rospy.spin()
-
-"""
-def my_callback(request):
-
-    rospy.loginfo("move_robot Service called")
-    response=my_goalResponse()
-    print("my x and y coordinates")
-    print(request.x_goal,request.y_goal)
-    move = movetogoal(request.x_goal,request.y_goal)
-    success=move.moverobot()
-    response.success=success
-    rospy.loginfo("Finished move_robot service")
-    print(response.success)
-    return response.success
-    
-
-rospy.init_node('move_to_goal')
-my_service = rospy.Service('/move_robot_to_goal', my_goal , my_callback)
-rospy.loginfo("MOVE_ROBOT Service Ready")
-"""
-

@@ -91,7 +91,6 @@ def turn():
 
 #pub = rospy.Publisher('fake_pub', Bool, queue_size=1)
 rospy.init_node('fake_pub', anonymous=True)
-pub= rospy.Publisher()
 """
 global poseX
 global poseY
@@ -116,6 +115,7 @@ response_goals= find_goals_service(find_goals_request)
 
 #----------------- start move action ----------------------
 #print(response_goals)
+
 rospy.loginfo('Executing state move')
 try:
 	rospy.wait_for_service('/move_robot_to_goal')# Wait for the service to be running (with launch file)
