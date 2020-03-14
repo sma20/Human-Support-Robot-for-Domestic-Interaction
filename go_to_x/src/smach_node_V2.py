@@ -29,7 +29,7 @@ job_done=False
 
 #Check the whole process time hasn't extended the maximum duration allowed
 #Sunbul: would be great to read the topic you created here to check if a "STOP" command was received to stop everything directly here
-
+#Daria: i did not implemented the stop command yet. its a tricky one. might have to make it a service and i dont know how to make google API a service.:D
 #This fct is not complete
 def check_stop(event):
 	global begin_time
