@@ -290,7 +290,8 @@ def main():
                                         'fail':'get_failure'},
                             remapping={'position_goal':'position_goal'})
             #Search space to find the object
-
+            smach.StateMachine.add('search_map', search_map(),transitions={'success':'search_closest_position',
+                                    'failure':'get_failure'})
 
 
 #----------------------------- END GET State Machine ------------------------------
