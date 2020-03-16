@@ -1,7 +1,5 @@
 <launch>
-<!-- search map goals set service-->
-    <node pkg="go_to_x" type="map_exploration_service_v2.py" name="identify_goals_search_map" output="screen"> </node>
 
-<!-- search map python file for launching service and move action-->
+<!-- search map python file for launching search goalsand move action-->
     <node pkg="go_to_x" type="search_map.py" name="search_map_service" output="screen"> </node>
 </launch>
