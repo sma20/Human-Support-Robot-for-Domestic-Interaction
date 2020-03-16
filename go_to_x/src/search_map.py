@@ -10,18 +10,21 @@ import rospy, time
 import roslib
 import math as math
 import actionlib
-from nav_msgs.msg import Odometry
+import numpy as np
+from nav_msgs.msg import Odometry, OccupancyGrid
 from std_msgs.msg import Bool
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from go_to_x.srv import find_goals, find_goalsResponse
-from geometry_msgs.msg import Point, PoseStamped, Quaternion
+from geometry_msgs.msg import Point, PoseStamped, Quaternion, Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
 
 
 POS_TOLERANCE=0.1
 max_duration=60*2 #max duration before considering something went wrong: 2min
 STOP=False
+endService=False
+start_check=True
 
 #----------------------- ODOM CLASS -------------------
 #each time the class is called, the odom is updated
@@ -80,6 +83,7 @@ def publish_once_in_cmd(speed):
 #not to miss any objects around. 	 
 def turn():
     odom=getodom()
+    speed=Twist()
     """we do a 360
     """
     
@@ -110,9 +114,126 @@ def turn():
     rospy.sleep(0.5)
 
 #------------------------------------------------------------------
+#--------------- MAP CONVERSION FCTS --------------------------------
+
+#Convert from points to cells
+def convertPointToCell(goalx,goaly, gridOriginX, gridOriginY, resolution):
+
+    goalPosCellX = int((goalx - gridOriginX) / resolution)
+    goalPosCellY = int((goaly- gridOriginY) / resolution)
+
+    """
+    if not grid.isWithinGrid(tempCell):
+        raise Exception("Error: The position selected was outside of the grid! Please, try again.")
+    """
+    return goalPosCellX, goalPosCellY
+
+#Converts cells to points
+def convertCellToPoint(x,y, cellOriginX, cellOriginY, resolution):
+ 
+    posx =  resolution*x + cellOriginX
+    posy =  resolution*y + cellOriginY 
+    return posx, posy
+
+#-------------------- FIND GOAL FCT ---------------------------------
+#here we set our goals accross the room/home in points where we believe there is no obstacles
+def goals_points(xminc, xmaxc, yminc,ymaxc, matrix_map, resolution, gridOriginX, gridOriginY):
+	goals_to_reach=[]
+	goals_to_reachxm, goals_to_reachym=[],[]
+
+#We check the whole room. +6 ==30cm to be sure we don't try to enters the angles
+	for x in range(xminc+4, xmaxc):
+		for y in range(yminc+4,ymaxc):  
+			#print("data", map.data[x+y*map_sizeX])	
+			#We want the area to be free of objects		
+			if matrix_map[x][y]==0 and matrix_map[x-1][y]==0 and matrix_map[x][y-1]==0 and matrix_map[x-1][y-1]==0 and  matrix_map[x+1][y+1]==0 and matrix_map[x+1][y]==0 and matrix_map[x+1][y-1]==0 and matrix_map[x][y+1]==0 and matrix_map[x-1][y+1]==0: #the extremities shouldn't be a problem
+				if matrix_map[x+2][y-1]==0 and matrix_map[x+2][y]==0 and matrix_map[x+2][y+1]==0 and matrix_map[x+2][y+2]==0 and matrix_map[x+1][y+2]==0 and matrix_map[x][y+2] ==0 and matrix_map[x-1][y+2]==0:
+					#map_division[x-left][y-down]=0 #just to visualize it 
+					if (len(goals_to_reach)== 0): #if there is already something in goals_to_reach, else prob 
+						goals_to_reach.append([x, y])
+						
+					else:
+						#we check we haven't already a goal set around those parts, to avoid goals too close from one another
+						goal_too_close=False
+						for i in range(len(goals_to_reach)):
+							#8 == 40cm in world m
+							if ((abs(y-goals_to_reach[i][1]) <9) or abs(x-goals_to_reach[i][0]) <9): #if we already have a goal around this pose
+								goal_too_close=True
+								break
+						if (goal_too_close==False):
+							goals_to_reach.append([x, y])
+							#map_division[x-left][y-down]=5
 
 
-#--------------------------------ACTION_MOVE --------------------------
+	#print("goals_to reach")
+	#print(goals_to_reach)
+	cellOriginX, cellOriginY=  gridOriginX+resolution/2, gridOriginY+resolution/2
+	print("goals_to_reach in px")
+	print(goals_to_reach)
+	#cellOriginX, cellOriginY=convertPointToCell(gridOriginX,gridOriginY, gridOriginX,gridOriginY,resolution)
+	print(np.shape(goals_to_reach))
+	for i in range(len(goals_to_reach)):
+		xm,ym=convertCellToPoint(goals_to_reach[i][0],goals_to_reach[i][1], cellOriginX, cellOriginY, resolution)
+		goals_to_reachxm.append(xm)
+		goals_to_reachym.append(ym)
+	return goals_to_reachxm, goals_to_reachym
+
+
+#CALLBACK MAP SUB (in service callback)
+def callback_map(map):
+    global endService  
+    global goals_to_reachx
+    global goals_to_reachy
+    map_sizeX=map.info.width
+    map_sizeY=map.info.height
+    resolution= map.info.resolution
+    gridOriginX, gridOriginY= (map.info.origin.position.x), (map.info.origin.position.y)
+    cellOriginX, cellOriginY=  gridOriginX+resolution/2, gridOriginY+resolution/2
+    """
+    print(gridOriginX, gridOriginY)
+    print(cellOriginX, cellOriginY)
+    """
+    #list_map= list(map.data)
+
+    #Brieuc: to take it off once you got your topic, add here the extraction of x y of the room
+    #test with kitchen FOR THE MOMENT------------------------------------------------
+    xmin=0.5
+    xmax=5
+    ymin=0
+    ymax=3.5
+
+
+    xminc,yminc=convertPointToCell(xmin,ymin, gridOriginX, gridOriginY, resolution)
+    xmaxc,ymaxc=convertPointToCell(xmax,ymax, gridOriginX, gridOriginY, resolution)
+    """
+    testx,testy=convertCellToPoint(xminc,yminc, cellOriginX, cellOriginY, resolution)
+    print("xmin,ymin",xmin,ymin)
+    print("xminc,yminc",xminc,yminc)
+    print("testx,testy",testx,testy)
+    """
+
+    matrix_map= []
+    current_index = 0
+    previous_index = 0
+    counter=0
+
+    #convert 1 dimensional array to 2 dimensional array
+    while current_index < len(map.data):
+        counter += 1
+        current_index = counter * map_sizeY
+        matrix_map.append(map.data[previous_index:current_index])
+        previous_index = current_index
+
+
+    #map_division = np.zeros((xlen,ylen))	# (x,y)
+    goals_to_reachx, goals_to_reachy=goals_points(xminc, xmaxc, yminc,ymaxc,  matrix_map, resolution, gridOriginX, gridOriginY)
+    print("goals to reach in m")
+    for i in range(len(goals_to_reachx)):
+        print(goals_to_reachx[i], goals_to_reachy[i])
+    endService=True
+
+
+#-------------------------------- ACTION_MOVE --------------------------
 
 #want to try and lift the head here (to see the objects well)
 def check_result(cli):
@@ -180,38 +301,37 @@ def move_action(destination_x,destination_y, poseX,poseY):
 #------------------------- NODE ----------------------------
 
 if __name__ == "__main__":
-    pub = rospy.Publisher('job_done', Bool, queue_size=2)
     #this publisher will allow us to monitor the state of this whole function
-    rospy.init_node('search_map-service', anonymous=True)
-    pub.publish(False) #once everything terminated, STOP
+    pub_job_done = rospy.Publisher('job_done', Bool, queue_size=2)
 
-
+    rospy.init_node('search_map_service', anonymous=True)
+    pub_job_done.publish(False) #once everything terminated, STOP
+    global endService
+    global goals_to_reachx
+    global goals_to_reachy
     global begin_time
-    global STOP
     odom= getodom()
 
     #----------------- start identify goal service ----------------------
-    rospy.loginfo('Executing get goals to search room , service on?')
-    try:
-        rospy.wait_for_service('/identify_goals')# Wait for the service to be running (with launch file)
-        find_goals_service = rospy.ServiceProxy('/identify_goals',find_goals) # Create connection to service
-        find_goals_request = find_goalsRequest() # Create an object of type EmptyRequest
-    except rospy.ServiceException, e:
-        print ("Service get goals to search room failed: %s"%e)
-
-    rospy.loginfo('Executing service ')
+    rospy.loginfo('Executing get goals to search room')
 
     #Testing purpose
     """
-    Sunbul: subscribe to the speech topic to retrieve romm and object name
+    Sunbul: subscribe to the speech topic to retrieve room and object name
     to add here and change the find_goals_request.room by it
+    it will probably need to be as globl variables
     """
 
-    find_goals_request.start_check=True
-    find_goals_request.room="kitchen"
-    #this service gives back 2 arrays (x,y) of several goals to go to in the room/home
-    response_goals= find_goals_service(find_goals_request)
 
+    room="kitchen"
+    object_name="teaspoon"
+    #this callback gives back 2 arrays (x,y) of several goals to go to in the room/home
+    #goals_to_reachx and y.
+
+    if endService== False:
+        sub= rospy.Subscriber('/map', OccupancyGrid, callback_map)
+    while endService!=True:
+        i=0
 
     #----------------- start move action ----------------------
     #print(response_goals)
@@ -219,16 +339,16 @@ if __name__ == "__main__":
     rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
 
     #we go from 1 position to the next
-    for i in range(len(response_goals.goals_to_reachx)):   
+    for i in range(len(goals_to_reachx)):   
         #This begin_time is used to ensure that after a delay the action is stopped
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
 
         #check sake
-        print("next goal:",response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i])
+        print("next goal:",goals_to_reachx[i],goals_to_reachy[i])
         #check odom  
         poseX,poseY, posew = odom.get()
         #send goal to move action  
-        response_move = move_action(response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i], poseX, poseY)    
+        response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)    
         turn()    
         
         """
@@ -239,5 +359,5 @@ if __name__ == "__main__":
 
 
     print ("end")
-    pub.publish(True) #to stop the launch file
+    pub_job_done.publish(True) #to stop the launch file
 
