@@ -179,15 +179,16 @@ class search_closest_position(smach.State):
 # parameters to enter: object, room (or home if any)
 # outputs: a position x,y,z as a point
 #Brieuc: you became the csv expert now ;) 
-"""
+#Sunul: extraction of the object name here
+
 class retrieve_position_object(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['goal_found'],
-                                    input_keys=['name_object']
+        smach.State.__init__(self, outcomes=['goal_found','goal_not_found'],
                                     output_keys=['real_goal_position'])
     def execute(self,userdata):
+    	return 'goal_not_found'
 
-"""
+
 
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
 #SEARCH_MAP.launch /search_map.py and map_exploration_service_v2.py -
@@ -208,7 +209,6 @@ class search_map(smach.State):
         rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
         #the roslaunch has been tested in test_launch, test again when we have the objects file
         sub = rospy.Subscriber('job_done', Bool, callback_job_done)
-        rospy.init_node('search_map', anonymous=True)
 
         #we launch a full roslaunch here to start this stuff
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -225,6 +225,7 @@ class search_map(smach.State):
         # 5min later
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
+        return 'success'#to adapt to the real result
         
         
 
@@ -277,7 +278,7 @@ def main():
             #Search position of the object
             smach.StateMachine.add('retrieve_position_object', retrieve_position_object(),transitions={'goal_found':'search_closest_position',
                                     'goal_not_found':'search_map'},
-                                    remapping={'name_object':'name_object', 'real_goal_position':'real_goal_position'})
+                                    remapping={'real_goal_position':'real_goal_position'})
             
             #Search closest accessible point to the object
             smach.StateMachine.add('search_closest_position', search_closest_position(), 
