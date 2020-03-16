@@ -179,64 +179,65 @@ def move_action(destination_x,destination_y, poseX,poseY):
 
 #------------------------- NODE ----------------------------
 
-pub = rospy.Publisher('job_done', Bool, queue_size=2)
-#this publisher will allow us to monitor the state of this whole function
-rospy.init_node('search_map', anonymous=True)
-pub.publish(False) #once everything terminated, STOP
+if __name__ == "__main__":
+    pub = rospy.Publisher('job_done', Bool, queue_size=2)
+    #this publisher will allow us to monitor the state of this whole function
+    rospy.init_node('search_map-service', anonymous=True)
+    pub.publish(False) #once everything terminated, STOP
 
 
-global begin_time
-global STOP
-odom= getodom()
+    global begin_time
+    global STOP
+    odom= getodom()
 
-#----------------- start identify goal service ----------------------
-rospy.loginfo('Executing get goals to search room , service on?')
-try:
-	rospy.wait_for_service('/identify_goals')# Wait for the service to be running (with launch file)
-	find_goals_service = rospy.ServiceProxy('/identify_goals',find_goals) # Create connection to service
-	find_goals_request = find_goalsRequest() # Create an object of type EmptyRequest
-except rospy.ServiceException, e:
-	print ("Service get goals to search room failed: %s"%e)
+    #----------------- start identify goal service ----------------------
+    rospy.loginfo('Executing get goals to search room , service on?')
+    try:
+        rospy.wait_for_service('/identify_goals')# Wait for the service to be running (with launch file)
+        find_goals_service = rospy.ServiceProxy('/identify_goals',find_goals) # Create connection to service
+        find_goals_request = find_goalsRequest() # Create an object of type EmptyRequest
+    except rospy.ServiceException, e:
+        print ("Service get goals to search room failed: %s"%e)
 
-rospy.loginfo('Executing service ')
+    rospy.loginfo('Executing service ')
 
-#Testing purpose
-"""
-Sunbul: subscribe to the speech topic to retrieve romm and object name
-to add here and change the find_goals_request.room by it
-"""
-
-find_goals_request.start_check=True
-find_goals_request.room="kitchen"
-#this service gives back 2 arrays (x,y) of several goals to go to in the room/home
-response_goals= find_goals_service(find_goals_request)
-
-
-#----------------- start move action ----------------------
-#print(response_goals)
-
-rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
-
-#we go from 1 position to the next
-for i in range(len(response_goals.goals_to_reachx)):   
-    #This begin_time is used to ensure that after a delay the action is stopped
-    begin_time = (rospy.Time.from_sec(time.time())).to_sec()
-
-    #check sake
-    print("next goal:",response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i])
-    #check odom  
-    poseX,poseY, posew = odom.get()
-    #send goal to move action  
-    response_move = move_action(response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i], poseX, poseY)    
-    turn()    
-    
+    #Testing purpose
     """
-    add here a check for the object in question.
-
-    Brieuc: search in csv file object in this room/ or check yolo output directly (may be faster to just check labels?) 
+    Sunbul: subscribe to the speech topic to retrieve romm and object name
+    to add here and change the find_goals_request.room by it
     """
 
+    find_goals_request.start_check=True
+    find_goals_request.room="kitchen"
+    #this service gives back 2 arrays (x,y) of several goals to go to in the room/home
+    response_goals= find_goals_service(find_goals_request)
 
-print ("end")
-pub.publish(True) #to stop the launch file
+
+    #----------------- start move action ----------------------
+    #print(response_goals)
+
+    rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
+
+    #we go from 1 position to the next
+    for i in range(len(response_goals.goals_to_reachx)):   
+        #This begin_time is used to ensure that after a delay the action is stopped
+        begin_time = (rospy.Time.from_sec(time.time())).to_sec()
+
+        #check sake
+        print("next goal:",response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i])
+        #check odom  
+        poseX,poseY, posew = odom.get()
+        #send goal to move action  
+        response_move = move_action(response_goals.goals_to_reachx[i],response_goals.goals_to_reachy[i], poseX, poseY)    
+        turn()    
+        
+        """
+        add here a check for the object in question.
+
+        Brieuc: search in csv file object in this room/ or check yolo output directly (may be faster to just check labels?) 
+        """
+
+
+    print ("end")
+    pub.publish(True) #to stop the launch file
 
