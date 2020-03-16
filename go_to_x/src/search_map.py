@@ -84,6 +84,7 @@ def publish_once_in_cmd(speed):
 def turn():
     odom=getodom()
     speed=Twist()
+    print("turn")
     """we do a 360
     """
     
@@ -282,7 +283,8 @@ def move_action(destination_x,destination_y, poseX,poseY):
 
     #if delay passed we stop the robot here and there with the goal topic.
     if STOP== True:
-        poseX,poseY = odom.getPose()
+        odom= getodom()
+        poseX,poseY, posew = odom.get()
         print("actual pose", poseX, poseY)
         response_move = move_action(poseX, poseY, poseX, poseY)   
         STOP=False
