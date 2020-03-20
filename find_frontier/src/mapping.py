@@ -929,5 +929,4 @@ if __name__ == '__main__':
     s = rospy.Service('getCentroid', Centroid, getCentroid)
     print "getCentroid() service is active now!"
     rospy.spin()
-
     print "Complete!"

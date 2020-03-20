@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+#Amelioration: the move fct is a topic. An action may be a better idea.
+#The mapping is done with Hector mapping, using RTAbmap which allows to save in 2D a 3D image may be usefull. 
+#Beside this is the only function doing the mapping, a new remapping/update would be usefull. 
+#Finally, the robot must start from the same point eachtime since the rooms corners were entered manually. 
+# to automatize this "harris corner finder" could be the beginning of a solution (see in go_to_x/src/rubbish a 1st attempt) 
+
 import sys
 import rospy, time, tf
 import math as math
@@ -11,6 +17,8 @@ from tf.transformations import euler_from_quaternion,  quaternion_from_euler#
 from sensor_msgs.msg import LaserScan
 from threading import Thread
 import Queue
+import random
+import os 
 
 WHEEL_RADIUS = 0.035
 DISTANCE_BETWEEN_WHEELS = 0.23
@@ -23,6 +31,12 @@ ROTATE_AROUND_GRANULARITY = 9
 LINEAR_VELOCITY = 0.20 #if the robot is too slow or fast, change that
 OBSTACLE_DETECTION_THRESHOLD = 0.75
 
+max_duration=60*2 #We can decide of the delay of this whole operation here
+begin_time=0
+
+
+save_map_path='rosrun map_server map_saver -f /home/cata/hsr_ws2/src/go_to_x/map_tests/test1'
+#---------------------------------------PID-----------------------------------------------
 #Impelements PID controller
 class PID:
     #Initializes PID
@@ -65,6 +79,7 @@ class PID:
         self.Integrator = 0
         self.Derivator = 0
 
+#---------------------------------------ROBOT CONTROL (Turtlebot, but some are used for hsr)----------------------------------------------
 #A class that is responsible for the robot control and publishing messages to the robot
 class RobotControl:
     def __init__(self, publisher, update_rate, rotate_around_granularity, angle_tolerance, pos_tolerance):
@@ -77,7 +92,8 @@ class RobotControl:
     #Rotate 360 degrees
     def rotateAround(self):
         print("in rotate around")
-        for i in range(0, self.rotate_around_granularity):
+	N=random.randint(4, self.rotate_around_granularity+1)
+        for i in range(0, N):
             self.rotate(2 * math.pi/self.rotate_around_granularity)
 
     #Commands the robot to go to the position specified
@@ -299,7 +315,6 @@ def scanProcessing():
                                 # print "Obstacle encountered!"
                                 #obstacleEncountered = True #warning
                                 break
-
         rospy.sleep(0.1)
 
 #Processes the received map.
@@ -329,32 +344,32 @@ def requestTrajectory(goalPos):
         initPos.y = current_y
 
         #create a stub for costmap
-        if not PROCESS_COSTMAP:
+        if not PROCESS_COSTMAP and not exit:
             costMap = OccupancyGrid()
-
-        try:
-            trajectory = getTrajectory(initPos, goalPos, map, Bool(data=PROCESS_COSTMAP), costMap)
-            print("received")
-        except rospy.ServiceException, e:
-            print "getTrajectory() call failed: %s" % e
-            reachedGoal = True # Just exit the execution of this trajectory to be able to navigate to a new goal
-            isNewTrajectoryReady = True # Interrupt execution of the current trajectory
-            abnormalTermination = True
-            break
-
-        #Check if the previous trajectory was defined
-        try:
-            previousTrajectory
-        except NameError:
-            previousTrajectory = trajectory
-            isNewTrajectoryReady = True
-        else:
-            #Check if the previous trajectory is the same as the received trajectory
-            if previousTrajectory.path.poses != trajectory.path.poses:
+        if not exit:
+            try:
+                trajectory = getTrajectory(initPos, goalPos, map, Bool(data=PROCESS_COSTMAP), costMap)
+                print("received")
+            except rospy.ServiceException, e:
+                print "getTrajectory() call failed: %s" % e
+                reachedGoal = True # Just exit the execution of this trajectory to be able to navigate to a new goal
+                isNewTrajectoryReady = True # Interrupt execution of the current trajectory
+                abnormalTermination = True
+                break
+        if not exit:
+            #Check if the previous trajectory was defined
+            try:
+                previousTrajectory
+            except NameError:
+                previousTrajectory = trajectory
                 isNewTrajectoryReady = True
             else:
-                rospy.loginfo("previousTrajectory = trajectory")
-                rospy.sleep(7)
+                #Check if the previous trajectory is the same as the received trajectory
+                if previousTrajectory.path.poses != trajectory.path.poses:
+                    isNewTrajectoryReady = True
+                else:
+                    rospy.loginfo("previousTrajectory = trajectory")
+                    rospy.sleep(7)
 
 
 def publish_in_cmd(goal_begin):
@@ -364,17 +379,17 @@ def publish_in_cmd(goal_begin):
     once, it IS very important.
     """
     pub= rospy.Publisher("goal",PoseStamped,queue_size=10)
-    rospy.loginfo("here")
     while pub.get_num_connections() == 0:
         rospy.sleep(0.1)
-    print ("Connected?")
+    print ("Connecting")
     pub.publish(goal_begin)
     rospy.sleep(5)
     rospy.loginfo("Cmd Published")
 
-
+#----------------------------------------- HSR MOVE --------------------------------------------
 def new_hsr_function(destination_x,destination_y):
     global POS_TOLERANCE
+    global exit
     yaw_control = PID(P=0.8, I=0.05, D=0.001, Derivator=0, Integrator=0, outMin=-1.5, outMax=1.5)
     goal_begin=PoseStamped()
     
@@ -415,7 +430,7 @@ def new_hsr_function(destination_x,destination_y):
         or (current_y > destination_y + POS_TOLERANCE or current_y < destination_y - POS_TOLERANCE)) \
         and not math.sqrt((current_x - initial_x)**2 + (current_y - initial_y)**2) > initialDistance :
         i+=1
-        if i>120000000:
+        if i>120000000 or exit==True:
 
             print("too long, stop action goal")
             goal_begin.header.stamp = rospy.Time.now()
@@ -517,6 +532,8 @@ def exploreEnvironment():
     teleop_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=5) #check
     control = RobotControl(teleop_pub, POS_REQUEST_RATE, ROTATE_AROUND_GRANULARITY, ANGLE_TOLERANCE, POS_TOLERANCE)
 
+    rospy.Timer(rospy.Duration(10), check_duration)#Check every 10s if time limit reached or stop message received
+
     while not rospy.is_shutdown() and not exit:
         if abnormalTermination:
             #reset variables on abnormal termination
@@ -529,26 +546,26 @@ def exploreEnvironment():
         print "=====> Started new iteration <====="
         print "1) Rotating 360."
         control.rotateAround()
+        if exit ==False:
+            #2) Request new centroid
+            print "2) Requesting new centroid."
+            try:
+                currentPos = Point(x=current_x, y=current_y, z=0)
+                centroidResponse = getCentroid(map, currentPos)
+            except rospy.ServiceException, e:
+                print "getCentroid() call failed: %s" % e
+                abnormalTermination = True
+                isNewTrajectoryReady = True
+                continue
 
-        #2) Request new centroid
-        print "2) Requesting new centroid."
-        try:
-            currentPos = Point(x=current_x, y=current_y, z=0)
-            centroidResponse = getCentroid(map, currentPos)
-        except rospy.ServiceException, e:
-            print "getCentroid() call failed: %s" % e
-            abnormalTermination = True
-            isNewTrajectoryReady = True
-            continue
-
-        if not centroidResponse.foundCentroid.data:
-            #We are done, exit.
-            break
-
-        #3) Go to a new goal
-        print "3) Navigating to the centroid."
-        navigateToGoal(control, centroidResponse.centroid)
-        print "======>   Ended iteration   <====="
+            if not centroidResponse.foundCentroid.data:
+                #We are done, exit.
+                break
+        if exit ==False:
+            #3) Go to a new goal
+            print "3) Navigating to the centroid."
+            navigateToGoal(control, centroidResponse.centroid)
+            print "======>   Ended iteration   <====="
 
 #Navigates the robot to the goal position
 def navigateToGoal(control, goal):
@@ -560,12 +577,35 @@ def navigateToGoal(control, goal):
     print("check if thread ok")
     executeTrajectory(control)
 
+#----------------------- CHECK DURATION ------------------
+
+#Check the whole process time hasn't extended the maximum duration allowed
+#NB: see with Sunbul if we can' add a check keyword "STOP" to stop everything directly here
+
+def check_duration(event):
+    global begin_time
+    global max_duration
+    global exit
+    #print begin_time
+    ros_time_now = rospy.Time.from_sec(time.time())
+    now=ros_time_now.to_sec()
+    #print now
+
+    if (now-begin_time>max_duration):
+        print "execution TOO LONG"
+        exit=True
+        #rospy.is_shutdown()
+
+    #print 'Timer called at ' + str(event.current_real)
+
+
+
 #Main function
 if __name__ == "__main__":
 
     #Initialize the new node
     rospy.init_node('control')
-
+    
     #Wait for trajectory service to start up
     print "Waiting for getTrajectory() service to start up...",
     rospy.wait_for_service('getTrajectory')
@@ -580,6 +620,10 @@ if __name__ == "__main__":
     global getCentroid
     getCentroid = rospy.ServiceProxy('getCentroid', Centroid)
     print "DONE"
+
+    #Timer #to check that the function doesn't run too long
+    global begin_time
+    begin_time = (rospy.Time.from_sec(time.time())).to_sec()
     # centroid = getCentroid(map)
 
     #Flags that indicate if the initial or goal positions were received
@@ -638,8 +682,11 @@ if __name__ == "__main__":
     # control.rotate(math.pi)
 
     exploreEnvironment()
+    global save_map_path
 
-    print "Done with exploration. Exiting...",
+    print "Done with exploration. Exiting..."
+    print "saving map"
+    os.system(save_map_path)
     exit = True
     print "DONE"
 
