@@ -186,8 +186,29 @@ class retrieve_position_object(smach.State):
         smach.State.__init__(self, outcomes=['goal_found','goal_not_found'],
                                     output_keys=['real_goal_position'])
     def execute(self,userdata):
-    	return 'goal_not_found'
-
+	data_file="~/catkin_ws/src/semantic_hsr/data/"
+	real_goal_position=Point()
+	M=[]
+	u=0
+	with open(data_file) as csvfile:
+    		reader = csv.reader(csvfile) # change contents to floats
+    		for row in reader: # each row is a list
+        		M.append(row)
+			u=u+1
+	csvfile.close
+	k=0	
+	for i in range(1,u):
+		if(userdata.name_object==M[u][0]):
+			real_goal_position.x=M[u][1]
+			real_goal_position.y=M[u][2]
+			real_goal_position.z=M[u][3]
+			k=1
+			break
+	if(k==0):
+		print("Object not known")
+    		return 'goal_not_found'
+	else:
+		return real_goal_position
 
 
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
