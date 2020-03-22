@@ -353,6 +353,25 @@ if __name__ == "__main__":
         response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)    
         turn()    
         
+	
+	M=[]
+	u=0
+	data_file="~/catkin_ws/src/semantic_hsr/data/"
+	k=0
+	with open(data_file) as csvfile:
+			reader = csv.reader(csvfile) # change contents to floats
+			for row in reader: # each row is a list
+				M.append(row)
+				u=u+1
+	csvfile.close
+
+	for i in range(1,u):
+		if(object==M[u][0] and find_goals_request.room==M[u][4]):
+			print("object found")
+			k=1
+			break
+	if(k==0):
+		print("object not found")
         """
         add here a check for the object in question.
 
