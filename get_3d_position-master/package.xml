@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>get_3d_position</name>
+  <version>0.0.0</version>
+  <description>The get_3d_position package</description>
+
+  <maintainer email="kazuto.murase@tri.global">Kazuto Murase</maintainer>
+  <license>None</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>tmc_darknet_msgs</exec_depend>
+  <exec_depend>tmc_geometry_msgs</exec_depend>
+  <exec_depend>tmc_perspective_transformer</exec_depend>
+
+</package>

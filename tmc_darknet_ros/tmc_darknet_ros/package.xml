@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>tmc_darknet_ros</name>
+  <version>0.2.0</version>
+  <description>Meta package: tmc_darknet_ros</description>
+
+  <maintainer email="kazuto_murase_aa@mail.toyota.co.jp">Kazuto Murase</maintainer>
+
+  <license>TMC</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>tmc_yolo2_ros</run_depend>
+  <export>
+    <metapackage/>
+  </export>
+
+</package>

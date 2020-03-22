@@ -1,0 +1,20 @@
+<package>
+  <name>tmc_vision_msgs</name>
+  <version>0.2.0</version>
+  <description>認識関係のメッセージおよびサービスを定義する</description>
+  <maintainer email="akiyoshi_ochiai@mail.toyota.co.jp">Akiyoshi Ochiai</maintainer>
+
+  <license>TMC</license>
+
+  <url type="website">None</url>
+
+  <author>Hirohito Hattori</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <run_depend>std_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+</package>
