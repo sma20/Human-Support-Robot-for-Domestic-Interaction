@@ -36,4 +36,4 @@ what to change here
 ## Acknowledgment 
 
 Some packages have been adapted from other githubs:
-* [Find_frontier]( https://github.com/bnurbekov/Turtlebot_Navigation) - it has been adapted to fit our robot, mean of motion, added a time limit, used hector mapping instead of gmapping and save the map autonomously. 
+* [Find_frontier]( https://github.com/bnurbekov/Turtlebot_Navigation) - Change made: it has been adapted to fit our robot, mean of motion, added a time limit, used hector mapping instead of gmapping and save the map autonomously. 
