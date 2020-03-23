@@ -19,6 +19,7 @@ from go_to_x.srv import find_goals, find_goalsResponse
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
 
+path_to_objects="~/catkin_ws/src/semantic_hsr/data/"
 
 POS_TOLERANCE=0.1
 max_duration=60*2 #max duration before considering something went wrong: 2min
@@ -353,10 +354,12 @@ if __name__ == "__main__":
         response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)    
         turn()    
         
+	#---------- check if object found ---------------------
+	global path_to_objects
 	
 	M=[]
 	u=0
-	data_file="~/catkin_ws/src/semantic_hsr/data/"
+	data_file=path_to_objects
 	k=0
 	with open(data_file) as csvfile:
 			reader = csv.reader(csvfile) # change contents to floats
@@ -366,7 +369,7 @@ if __name__ == "__main__":
 	csvfile.close
 
 	for i in range(1,u):
-		if(object==M[u][0] and find_goals_request.room==M[u][4]):
+		if(object==M[u][0] and room==M[u][4]):
 			print("object found")
 			k=1
 			break
