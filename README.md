@@ -27,27 +27,35 @@ sudo apt-get install ros-kinetic-smach*
 ### Speech Recognition Package PreRequisits
 
 *installing Speech Recognition*
+```bash
 *pip install SpeechRecognition or pip install speech-recognition or with pip3
-
+```
 *installing nltk*
+```bash
 *Install Setuptools: http://pypi.python.org/pypi/setuptools
 *Install Pip: run sudo easy_install pip
 *Install Numpy (optional): run sudo pip install -U numpy
 *Install NLTK: run sudo pip install -U nltk
 *Test installation: run python then type import nltk
+```
 
 *installing eSpeak*
+```bash
 *sudo apt-get install espeak
+```
 
 *Installing PyAudio*
+```bash
 *sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
 *sudo apt-get install ffmpeg libav-tools
 *sudo pip install pyaudio
-
+```
 
 ***To run(for now)
+```bash
 rosrun speech_reco test.py
 rosrun speech_reco stop.py
+```
 ### Find_frontier
 
 ## Usage
