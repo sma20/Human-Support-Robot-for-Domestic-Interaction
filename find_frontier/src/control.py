@@ -31,7 +31,7 @@ ROTATE_AROUND_GRANULARITY = 9
 LINEAR_VELOCITY = 0.20 #if the robot is too slow or fast, change that
 OBSTACLE_DETECTION_THRESHOLD = 0.75
 
-max_duration=60*2 #We can decide of the delay of this whole operation here
+max_duration=60*20 #We can decide of the delay of this whole operation here
 begin_time=0
 
 
