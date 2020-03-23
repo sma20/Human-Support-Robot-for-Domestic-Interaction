@@ -26,7 +26,7 @@ begin_time=0
 max_duration=60*17 #max duration before considering something went wrong: 17min
 STOP=False
 
-#--to check the execution of a launch file (search_map)
+#--to check the execution of a launch file (search_map/mapping)
 job_done=False
 
 #------------------- TIME CHECK FCT ------------------------
