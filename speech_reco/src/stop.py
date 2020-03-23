@@ -9,7 +9,6 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from std_msgs.msg import String
-import os
 
 #rospy.init_node('speech_rec', anonymous=True)
 
