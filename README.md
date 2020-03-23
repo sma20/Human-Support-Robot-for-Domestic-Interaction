@@ -24,10 +24,7 @@ sudo apt-get install ros-kinetic-smach*
 
 ## Packages descriptions
 
-### hsr_world
-
-
-
+### Speech Recognition Package PreRequisits
 
 *installing Speech Recognition*
 pip install SpeechRecognition or pip install speech-recognition or with pip3
