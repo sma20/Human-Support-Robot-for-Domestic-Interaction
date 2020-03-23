@@ -8,14 +8,19 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from std_msgs.msg import String
+from nltk.tokenize import word_tokenize
+from nltk.tokenize import sent_tokenize
+import os
 
 #rospy.init_node('speech_rec', anonymous=True)
 
 audio = record = aup = None
 
-action = [[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
+action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
 
 area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen' ]
+
+
 nouns = []
 verbs = []
 synonyms = []
@@ -24,8 +29,17 @@ task_comb = []
 
 def talker(text):
     pub = rospy.Publisher('chatter', String, queue_size=10)
+    #pub1 = rospy.Publisher('check_stop', String, queue_size=10)
     rospy.init_node('speech_rec', anonymous=True)
-    pub.publish(text)
+    rate = rospy.Rate(10) # 10hz
+    while not rospy.is_shutdown():
+        if 'stop' in text:
+            rospy.on_shutdown()
+            os.system("espeak 'I'm shutting down'")
+            print('im shutting down')
+        pub.publish(text)
+        rate.sleep()
+
 
 def createIntentNounPairs(intents, nouns):
     for x in nouns:
@@ -42,8 +56,10 @@ def main():
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
+    print("hellow")
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
+        #os.system("espeak 'Please say something'")
         print("Say something!")
         audio = r.listen(source)
         #rospy.spin(1)
@@ -58,6 +74,7 @@ def main():
         return speechToText
 
     except sr.UnknownValueError:
+        os.system("espeak 'Google Speech Recognition could not understand audio'")
         print("Google Speech Recognition could not understand audio")
 
     except sr.RequestError as e:
@@ -72,16 +89,91 @@ def main():
 if action.contains('BRING_MILK'):
     print ("call the method to bring the milk")"""
 
+def findresponse(text):
+
+    list = [ ["i am fine too", "how can i help you"],["i am good too and you","i am good too, how can i help you"],
+    ["i am good too", "how can i help you"], ["not too bad and you", "i am good, how can i help you"],
+    ["not too bad", "i am good, how can i help you"] ]
+    # tokenization
+    X_list = word_tokenize(text)
+
+    for l in list:
+
+        Y_list = word_tokenize(l[0])
+
+        response = l[1]
+        # sw contains the list of stopwords
+        sw = stopwords.words('english')
+        l1 =[];l2 =[]
+
+        # remove stop words from string
+        X_set = {w for w in X_list if not w in sw}
+        Y_set = {w for w in Y_list if not w in sw}
+
+        # form a set containing keywords of both strings
+        rvector = X_set.union(Y_set)
+        for w in rvector:
+            if w in X_set: l1.append(1) # create a vector
+            else: l1.append(0)
+            if w in Y_set: l2.append(1)
+            else: l2.append(0)
+        c = 0
+
+        # cosine formula
+        for i in range(len(rvector)):
+                c+= l1[i]*l2[i]
+        cosine = c / float((sum(l1)*sum(l2))**0.5)
+        print("similarity: ", cosine)
+
+        if cosine > 0.5:
+            return response
+
+    return "Did you mean "+ text
+
 if __name__ == '__main__':
     #while not rospy.is_shutdown():
+    os.system("espeak 'Hello Human, how are you today'")
+    print("Hello Human, how are you today")
 
     text=main()
+    text1 = text
+
+    while True:
+
+        if "yes" in text:
+            text = text1
+            break
+        elif "no" in text:
+            os.system("espeak 'can you please say it again'")
+            print("can you please say it again")
+            text = main()
+        else:
+            print(text)
+            resp = findresponse(text)
+            os.system("espeak '"+resp+"'")
+            print(resp)
+            text1 = text
+            text = main()
+
 
 
     if 'living' in text:
         text = text.replace('room','')
         text = text.replace('living', 'livingroom')
 
+    print(text)
+
+    if 'medicine' in text:
+        text = text.replace('box','')
+        text = text.replace('medicine', 'medicine-box')
+
+    if 'turn' in text:
+        text = text.replace('on','')
+        text = text.replace('turn', 'turn-on')
+
+    if 'reading' in text:
+        text = text.replace('glasses','')
+        text = text.replace('reading', 'reading-glasses')
     print(text)
 
     """if 'shower' in text:
@@ -223,7 +315,6 @@ if __name__ == '__main__':
                         talker(t)
                     except rospy.ROSInterruptException:
                         pass
-                    break
                 elif tc[1] == a[1]:
 
                     if tc[0] in area:
@@ -234,6 +325,3 @@ if __name__ == '__main__':
                             talker(t)
                         except rospy.ROSInterruptException:
                             pass
-                    break
-            if count==1:
-                break
