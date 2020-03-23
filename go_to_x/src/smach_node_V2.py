@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#NOTE: MAPPING- The map behing registered is called test1 and the mapping stops after 1 min, to change and take this map as reference for next uses
 
 import roslib
 import rospy, time
@@ -12,15 +13,15 @@ from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
-
-
+#roslaunch mapping path
+path_mapping="/home/cata/hsr_ws2/src/find_frontier/launch/find_front.launch"
 #roslaunch search_map path
 path_search_map="/home/cata/hsr_ws2/src/go_to_x/launch/search_map.launch"
 #path to the csv file
 path_to_objects="~/catkin_ws/src/semantic_hsr/data/"
 #--time check global var--
 begin_time=0
-max_duration=60*10 #max duration before considering something went wrong: 10min
+max_duration=60*17 #max duration before considering something went wrong: 17min
 STOP=False
 
 #--to check the execution of a launch file (search_map)
@@ -61,8 +62,7 @@ def callback_job_done(finished):
     global job_done
     job_done= finished
 
-#sunbul: if you wish to add yur callback here
-
+#sunbul: if you wish to add your callback here
 
 
 
@@ -71,7 +71,8 @@ def callback_job_done(finished):
 #space for improvement, could replace the string by functions here (maybe to check if that is the wanted action)
 def switch_actions(action_choice):
     switcher={
-            1:'get',
+            1:'mapping',
+            2:'get',
             #2:'accompany', 
             #3:'find',
             #actions names
@@ -84,7 +85,7 @@ def switch_actions(action_choice):
 #Here we choose which action will be executed. maybe add a verification check with the user here
 class choose_actions(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['get','nothing']) # 'follow','other actions names])
+        smach.State.__init__(self, outcomes=['get','mapping','nothing']) # 'follow','other actions names])
 
     def execute(self,userdata):
         action_choice=1
@@ -258,8 +259,7 @@ class search_map(smach.State):
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
         return 'success'#to adapt to the real result
-        
-        
+      
 
 #----------------------------- END SUB_GET CLASS ------------------------------------------
 
@@ -273,7 +273,39 @@ class search_map(smach.State):
 
 #----------------------------- END SUB_ACCOMPANY CLASS ------------------------------------------
 
+#----------------------------- SUB_MAP State machine Class --------------------------------------------
 
+
+class mapping(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['success','failure'])
+    
+    def execute(self,userdata):
+        global path_search_map
+        global begin_time
+
+        rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
+        #the roslaunch has been tested in test_launch, test again when we have the objects file
+        sub = rospy.Subscriber('job_done', Bool, callback_job_done)
+
+        #we launch a full roslaunch here to start this stuff
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_mapping])  
+        launch.start()
+        rospy.loginfo("started")
+        begin_time = (rospy.Time.from_sec(time.time())).to_sec()
+
+        #while delay not expired or the search isn't finished
+        while STOP==False or job_done==False:
+            i=0
+        #rospy.sleep(60*5)
+        # 5min later
+        rospy.loginfo("CLOOOOSE MAPING LAUNCH")
+        launch.shutdown()
+        return 'success'#to adapt to the real result
+
+#------------------------------ END SUB_MAP State Machine class ---------------------------
 
 # ----------------------------- Main (state machines) -------------------------------------
 def main():
@@ -289,7 +321,7 @@ def main():
     with sm_actions:
 
         smach.StateMachine.add('choose_actions', choose_actions(), 
-                                transitions={'get':'GET', 'nothing':'finished'}) #accompany  find
+                                transitions={'get':'GET','mapping':'MAPPING','nothing':'finished'}) #accompany  find
 
 
         # Create a GET state machine
@@ -302,6 +334,8 @@ def main():
         #sm_get.userdata.real_goal_position.x=2
         #sm_get.userdata.real_goal_position.y=6
 
+        #Create a MAPPING state machine
+        sm_map = smach.StateMachine(outcomes=['map_success', 'map_failure'])
 #----------------------------- GET STATE MACHINE ----------------------------------
         # Open the container GET
         with sm_get:
@@ -328,10 +362,23 @@ def main():
 
 
 #----------------------------- END GET State Machine ------------------------------
+#----------------------------- MAPPING State Machine ------------------------------
+        with sm_map:
+            #Search space to find the object
+            smach.StateMachine.add('mapping', mapping(),transitions={'success':'map_success',
+                                'failure':'map_failure'})
+
+
+#----------------------------- END MAPPING State Machine ---------------------------
+
+
 
         #link between sm_action and sm_get. sm_get called by sm_actions
         smach.StateMachine.add('GET', sm_get, 
                                 transitions={'get_success':'finished', 'get_failure':'finished'})
+         #link between sm_action and sm_map. sm_map called by sm_actions
+        smach.StateMachine.add('MAPPING', sm_map, 
+                                transitions={'map_success':'finished', 'map_failure':'finished'})
         
         
         #initialization sm_action for the visualizer "rosrun smach_viewer smach_viewer.py"
