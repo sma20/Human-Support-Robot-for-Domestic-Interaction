@@ -16,7 +16,8 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler#
 
 #roslaunch search_map path
 path_search_map="/home/cata/hsr_ws2/src/go_to_x/launch/search_map.launch"
-
+#path to the csv file
+path_to_objects="~/catkin_ws/src/semantic_hsr/data/"
 #--time check global var--
 begin_time=0
 max_duration=60*10 #max duration before considering something went wrong: 10min
@@ -186,8 +187,17 @@ class retrieve_position_object(smach.State):
         smach.State.__init__(self, outcomes=['goal_found','goal_not_found'],
                                     output_keys=['real_goal_position'])
     def execute(self,userdata):
-	data_file="~/catkin_ws/src/semantic_hsr/data/"
+	global path_to_objects
+	
+	
+	#sunbul, extract object name and room here
+	#name_object
+	#room
+	#brieuc: you forgot to verify the room 
+	
+	data_file=path_to_objects
 	real_goal_position=Point()
+	
 	M=[]
 	u=0
 	with open(data_file) as csvfile:
@@ -198,7 +208,7 @@ class retrieve_position_object(smach.State):
 	csvfile.close
 	k=0	
 	for i in range(1,u):
-		if(userdata.name_object==M[u][0]):
+		if(name_object==M[u][0]):
 			real_goal_position.x=M[u][1]
 			real_goal_position.y=M[u][2]
 			real_goal_position.z=M[u][3]
@@ -208,7 +218,8 @@ class retrieve_position_object(smach.State):
 		print("Object not known")
     		return 'goal_not_found'
 	else:
-		return real_goal_position
+		userdata.real_goal_position = real_goal_position
+		return 'goal-found'
 
 
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
@@ -288,8 +299,8 @@ def main():
         sm_get.userdata.position_goal= Point()
 
         #for testing GET //WILL HAVE to be automatized:
-        sm_get.userdata.real_goal_position.x=2
-        sm_get.userdata.real_goal_position.y=6
+        #sm_get.userdata.real_goal_position.x=2
+        #sm_get.userdata.real_goal_position.y=6
 
 #----------------------------- GET STATE MACHINE ----------------------------------
         # Open the container GET
