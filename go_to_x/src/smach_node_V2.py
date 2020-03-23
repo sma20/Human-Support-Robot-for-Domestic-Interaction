@@ -234,7 +234,7 @@ class retrieve_position_object(smach.State):
 #output:nonne 
 class search_map(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['success','failure'])#,input_keys=['name_object']) #For the upgraded version
+        smach.State.__init__(self, outcomes=['success','failure'], output_keys=['real_goal_position'])#,input_keys=['name_object']) #For the upgraded version
     
     
     def execute(self,userdata):
@@ -260,6 +260,25 @@ class search_map(smach.State):
         # 5min later
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
+	
+	if STOP == False: #ADD a topic that tells if it was successfully achieved in fct on not, to avoid doing this aimelessly. 
+		real_goal_position=Point()
+		for i in range(1,u):
+			if(name_object==M[u][0] and room==M[u][4]):
+				real_goal_position.x=M[u][1]
+				real_goal_position.y=M[u][2]
+				real_goal_position.z=M[u][3]
+				k=1
+				break
+			if(k==0):
+				print("Object not known")
+				return 'failure'
+			else:
+				userdata.real_goal_position = real_goal_position
+				return 'goal-found'
+		
+		
+	
         return 'success'#to adapt to the real result
       
 
@@ -391,7 +410,8 @@ def main():
                             remapping={'position_goal':'position_goal'})
             #Search space to find the object
             smach.StateMachine.add('search_map', search_map(),transitions={'success':'search_closest_position',
-                                    'failure':'get_failure'})
+                                    'failure':'get_failure'},  
+				   remapping={'real_goal_position':'real_goal_position'})
 
 
 #----------------------------- END GET State Machine ------------------------------
