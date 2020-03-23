@@ -2,6 +2,7 @@
 #NOTE: 
 #MAPPING- The map behing registered is called test1 and the mapping stops after 1 min, to change and take this map as reference for next uses
 #There is a time constraint IN Mapping and IN the state machine
+
 import roslib
 import rospy, time
 import roslaunch
@@ -74,7 +75,7 @@ def switch_actions(action_choice):
     switcher={
             1:'mapping',
             2:'get',
-            #2:'accompany', 
+            3:'invite', 
             #3:'find',
             #actions names
     }
@@ -86,7 +87,7 @@ def switch_actions(action_choice):
 #Here we choose which action will be executed. maybe add a verification check with the user here
 class choose_actions(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['get','mapping','nothing']) # 'follow','other actions names])
+        smach.State.__init__(self, outcomes=['get','mapping','invite','nothing']) # 'follow','other actions names])
 
     def execute(self,userdata):
         action_choice=1
@@ -264,10 +265,34 @@ class search_map(smach.State):
 
 #----------------------------- END SUB_GET CLASS ------------------------------------------
 
-#---------------------------- SUB_FIND State machine classes -----------------------------------------------------------------
+#---------------------------- SUB_INVITE State machine classes -----------------------------------------------------------------
+
+class go_main_door(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['reached','not_reached'])
+        
+    
+    def execute(self,userdata):
+        #TO DO
+        #Here launch the move action with "if not succeded gives another mid_goal and retry"
+        return 'reached'
 
 
-#----------------------------- END SUB_FIND CLASS ------------------------------------------
+
+
+#explain the fct here
+#Name of the python files/ launch files used here
+#Inputs:
+#Outputs:
+class check(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['person_recognized','person_not_recognized'])
+    
+    
+    def execute(self,userdata):
+
+        return 'person_recognized'
+#----------------------------- END SUB_INVITE CLASS ------------------------------------------
 
 
 #---------------------------- SUB_ACCOMPANY State machine classes -----------------------------------------------------------------
@@ -275,8 +300,10 @@ class search_map(smach.State):
 #----------------------------- END SUB_ACCOMPANY CLASS ------------------------------------------
 
 #----------------------------- SUB_MAP State machine Class --------------------------------------------
-
-
+#here the map is created, the robot moves autonomously in the room, map it with hector slam and save it in go_to_x/map_tests
+#FIND_FRONT.launch is launched here it's in find_frontier package. 
+#No inputs
+#No outputs
 class mapping(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['success','failure'])
@@ -322,7 +349,7 @@ def main():
     with sm_actions:
 
         smach.StateMachine.add('choose_actions', choose_actions(), 
-                                transitions={'get':'GET','mapping':'MAPPING','nothing':'finished'}) #accompany  find
+                                transitions={'get':'GET','mapping':'MAPPING','invite':'INVITE','nothing':'finished'}) #accompany  find
 
 
         # Create a GET state machine
@@ -337,6 +364,11 @@ def main():
 
         #Create a MAPPING state machine
         sm_map = smach.StateMachine(outcomes=['map_success', 'map_failure'])
+
+        #Create an INVITE state machine (check who is at the front door)
+        sm_invite = smach.StateMachine(outcomes=['invite_success', 'invite_failure'])
+
+
 #----------------------------- GET STATE MACHINE ----------------------------------
         # Open the container GET
         with sm_get:
@@ -369,17 +401,41 @@ def main():
             smach.StateMachine.add('mapping', mapping(),transitions={'success':'map_success',
                                 'failure':'map_failure'})
 
-
 #----------------------------- END MAPPING State Machine ---------------------------
 
+#---------------------------- INVITE State Machine ---------------------------------
 
+
+#Brieuc, Sunbul: in this new class you will have to enter your functions here
+# Or if you don't succeed tell me your combined strategy if you want me to add it here.
+
+        with sm_invite:
+            #go at the door 
+            smach.StateMachine.add('go_main_door',go_main_door(),transitions={'reached':'check_person',
+                                'not_reached':'go_main_door'})#Not a good idea to create a loop here
+            
+            #check who is there
+            #Brieuc, maybe adding the front door position in the CSV file would be usefull for going there
+            
+            smach.StateMachine.add('check_person', check(),transitions={'person_recognized':'invite_success',
+                                'person_not_recognized':'invite_failure'}) #NOTE: invite success and failure will have to be replace with the name of the next fct you want to call in State machine
+
+            #ADD YOUR STATE MACHINE FCTS
+
+
+
+
+#---------------------------- END INVITE State Machine -----------------------------
 
         #link between sm_action and sm_get. sm_get called by sm_actions
         smach.StateMachine.add('GET', sm_get, 
                                 transitions={'get_success':'finished', 'get_failure':'finished'})
-         #link between sm_action and sm_map. sm_map called by sm_actions
+        #link between sm_action and sm_map. sm_map called by sm_actions
         smach.StateMachine.add('MAPPING', sm_map, 
                                 transitions={'map_success':'finished', 'map_failure':'finished'})
+        #link between sm_action and sm_invite. sm_invite called by sm_actions
+        smach.StateMachine.add('INVITE', sm_invite, 
+                                transitions={'invite_success':'finished', 'invite_failure':'finished'})
         
         
         #initialization sm_action for the visualizer "rosrun smach_viewer smach_viewer.py"
