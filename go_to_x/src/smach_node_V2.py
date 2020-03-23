@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-#NOTE: MAPPING- The map behing registered is called test1 and the mapping stops after 1 min, to change and take this map as reference for next uses
-
+#NOTE: 
+#MAPPING- The map behing registered is called test1 and the mapping stops after 1 min, to change and take this map as reference for next uses
+#There is a time constraint IN Mapping and IN the state machine
 import roslib
 import rospy, time
 import roslaunch
