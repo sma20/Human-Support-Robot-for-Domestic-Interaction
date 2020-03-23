@@ -35,5 +35,5 @@ what to change here
 
 ## Acknowledgment 
 
-Some packages have been adapted from other githubs
-The find_frontier was originally from XXX it has been adapted to fit our robot and mean of motion.
+Some packages have been adapted from other githubs:
+* [Find_frontier]( https://github.com/bnurbekov/Turtlebot_Navigation) - it has been adapted to fit our robot and mean of motion.
