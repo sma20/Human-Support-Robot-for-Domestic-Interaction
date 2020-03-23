@@ -8,6 +8,8 @@ Change the plan how you see fit
 ## Presentation
 
 ## Prerequisite
+You need to have Ros, Rviz, Gazebo installed on your laptop AND have the autorisation to install the HSR simulation.  
+
 
 To use the state machine you need to have smach installed:
 ```bash
@@ -20,6 +22,12 @@ sudo apt-get install ros-kinetic-smach*
 * [Maven](https://maven.apache.org/) - Dependency Management
 * [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
 
+## Packages descriptions
+
+### hsr_world
+
+### Find_frontier
+
 ## Usage
 
 ```python
@@ -30,6 +38,17 @@ Some package will have to be adapted to your paths.
 In XX.py
 ```python
 what to change here
+```
+
+## Test
+
+to check the state machine the viewer is launched with:
+```bash
+  rosrun smach_viewer smach_viewer.py
+```
+to launch the gazebo_world (HW lab) and rviz with hsr on it:
+```bash
+  roslaunch find_frontier find_front.launch 
 ```
 
 
