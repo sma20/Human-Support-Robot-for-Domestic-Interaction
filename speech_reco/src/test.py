@@ -56,7 +56,7 @@ def main():
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
-    print("hellow")
+    #print("hellow")
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
         #os.system("espeak 'Please say something'")
