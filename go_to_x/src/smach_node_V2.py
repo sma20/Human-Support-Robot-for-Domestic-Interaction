@@ -211,7 +211,7 @@ class retrieve_position_object(smach.State):
 	csvfile.close
 	k=0	
 	for i in range(1,u):
-		if(name_object==M[u][0]):
+		if(name_object==M[u][0] and room==M[u][4]):
 			real_goal_position.x=M[u][1]
 			real_goal_position.y=M[u][2]
 			real_goal_position.z=M[u][3]
@@ -222,7 +222,7 @@ class retrieve_position_object(smach.State):
     		return 'goal_not_found'
 	else:
 		userdata.real_goal_position = real_goal_position
-		return 'goal-found'
+		return 'goal_found'
 
 
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
