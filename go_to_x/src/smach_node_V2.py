@@ -59,13 +59,27 @@ def check_stop(event):
 
 #----------------------- SUBSCRIBER CALLBACKS ----------------------------------
 #----- callback of search_map class (to receive information if the job is been finished or not)
+def callback_stop(finish):
+    if 'stop' in finish.data:
+	STOP = True
+	print(finish.data)
+    else:
+	print(finish.data)
+	switch_actions(finish.data)
+
 
 def callback_job_done(finished):
     global job_done
     job_done= finished
-
-#sunbul: if you wish to add your callback here
-
+	
+	
+def callback_action(data):
+    global thing_to_get, action, place
+    #execute actions
+    list = data.split(',')
+    object_name = list[0] 
+    action = list[1] 
+    place = list[2] 
 
 
 #----------------------- ACTIONS machine class ----------------------------------
@@ -91,6 +105,7 @@ class choose_actions(smach.State):
 
     def execute(self,userdata):
         action_choice=1
+	rospy.Subscriber("chatter", String, callback_action)
         #Sunbul: your action info is to be retrieve from the topic here. only the action/the whole topic if you wish (then it will have to be passed as an output to the next state machine)
         
         choice=switch_actions(action_choice)
@@ -194,8 +209,12 @@ class retrieve_position_object(smach.State):
 	
 	
 	#sunbul, extract object name and room here
-	#name_object
-	#room
+	
+	object_name = list[0] #name_object
+        action = list[1] 
+        place = list[2] #room
+	
+	
 	#brieuc: you forgot to verify the room 
 	
 	data_file=path_to_objects
@@ -358,6 +377,8 @@ class mapping(smach.State):
 def main():
     rospy.init_node('smach_example_state_machine')
     print("first_smach_on")
+    rospy.Subscriber("chatter", String, callback_action)
+    rospy.Subscriber("chatter1", String, callback_stop)
 
     #action state machine
     sm_actions = smach.StateMachine(outcomes=['finished'])
