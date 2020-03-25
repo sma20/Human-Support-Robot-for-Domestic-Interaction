@@ -18,7 +18,7 @@ audio = record = aup = None
 
 action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
 
-area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen' ]
+area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen','home' ]
 
 
 nouns = []
@@ -56,7 +56,7 @@ def main():
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
-    #print("hellow")
+    print("hellow")
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
         #os.system("espeak 'Please say something'")
@@ -74,7 +74,7 @@ def main():
         return speechToText
 
     except sr.UnknownValueError:
-        os.system("espeak 'Google Speech Recognition could not understand audio'")
+        os.system("espeak 'sorry, i could not understand'")
         print("Google Speech Recognition could not understand audio")
 
     except sr.RequestError as e:
@@ -308,9 +308,14 @@ if __name__ == '__main__':
         for tc in task_comb:
             for a in action:
                 if tc[0] == a[0] and tc[1] == a[1]:
-                    print("do the action " , tc, "to/from", room)
+                    if room == '':
+                        room = 'home'
+                        print("do the action " , tc, "to/from", room)
+
+                    else:
+                        print("do the action " , tc, "to/from", room)
                     count = 1
-                    t = "do the action ,"+  str(tc)+ "from, "+ str(room)
+                    t =  str(tc[0]) +", "+  str(tc[1]) +", "+ room
                     try:
                         talker(t)
                     except rospy.ROSInterruptException:
@@ -319,7 +324,9 @@ if __name__ == '__main__':
 
                     if tc[0] in area:
                         print("do the action " , tc, "to/from", tc[0])
-                        t = "do the action ,"+  str(tc)+ "to/from, "+ str(tc[0])
+                        #t = "do the action ,"+  str(tc)+ "to/from, "+ str(tc[0])
+
+                        t = str(tc[0]) +", "+  str(tc[1]) +", "+ str(tc[0])
                         count = 1
                         try:
                             talker(t)
