@@ -10,19 +10,11 @@ Change the plan how you see fit
 ## Prerequisite
 You need to have Ros, Rviz, Gazebo installed on your laptop AND have the autorisation to install the HSR simulation.  
 
-
+### State Machine Package PreRequisit
 To use the state machine you need to have smach installed:
 ```bash
 sudo apt-get install ros-kinetic-smach*
 ```
-## Built With
-//examples, to change with what we actually use.
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Packages descriptions
 
 ### Speech Recognition Package PreRequisits
 
@@ -56,6 +48,7 @@ sudo apt-get install ros-kinetic-smach*
 rosrun speech_reco test.py
 rosrun speech_reco stop.py
 ```
+## Packages descriptions
 ### Find_frontier
 
 ## Usage
