@@ -48,6 +48,11 @@ sudo apt-get install ros-kinetic-smach*
 *sudo apt-get install ffmpeg libav-tools
 *sudo pip install pyaudio
 ```
+
+*for Text to Speech
+sudo apt update
+sudo apt install python-espeak
+
 ***To run(for now)
 ```bash
 rosrun speech_reco test.py
