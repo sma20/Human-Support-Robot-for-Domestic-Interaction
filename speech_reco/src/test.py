@@ -85,7 +85,6 @@ def main():
         if nouns[i] == row[2]:
             action = row['action']
 
-
 if action.contains('BRING_MILK'):
     print ("call the method to bring the milk")"""
 
