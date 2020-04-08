@@ -29,6 +29,12 @@ sudo apt-get install ros-kinetic-smach*
 *Install Numpy (optional): run sudo pip install -U numpy
 *Install NLTK: run sudo pip install -U nltk
 *Test installation: run python then type import nltk
+* To install the package like stopwords, tokenize verbs, nouns, we need nltk packages
+* Open python or python3 on terminal
+* write the following script
+* import nltk
+* nltk.download()
+* install all the corposes.
 ```
 
 *installing eSpeak*
