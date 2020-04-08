@@ -60,13 +60,13 @@ roscd hsrb_darknet_tutorials
 scripts/install_scripts/get_yolo_data.sh
 ```
 build them and after that install the package at this address : https://git.hsr.io/kazuto_murase/get_3d_position
-and change the file by the one on our github
-once this is done take the package on our github and build the workspace.
+and change the file ```bash get_3d_position.py ``` by the one on our github
+once this is done take the package semantic_hsr on our github and build the workspace.
 In order to try YOLO you need to do the following
 -launch the gazebo simulator
 -do : ```bash roslaunch hsrb_darknet_tutorials default_model_demo.launch  ```
-- rosrun the get_3d_position
--rosrun our package
+- do : ```bash python get_3d_position.py ```
+- do : ```bash python csv_writer.py ```
 
 ***To run(for now)
 ```bash
