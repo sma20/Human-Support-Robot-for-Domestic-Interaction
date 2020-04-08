@@ -42,6 +42,31 @@ sudo apt-get install ros-kinetic-smach*
 *sudo apt-get install ffmpeg libav-tools
 *sudo pip install pyaudio
 ```
+### YOLO Package PreRequisits
+In order to use YOLO with the hsr you first need to install this 3 package : 
+```bash
+git clone https://git.hsr.io/tmc/tmc_darknet.git
+git clone https://git.hsr.io/tmc/tmc_darknet_ros.git
+git clone https://git.hsr.io/tmc/hsrb_tk1_tutorials.git
+```
+do:
+```bash
+ cd ~/yolo_ws/src/hsrb_tk1_tutorials/hsrb_darknet_tutorials
+  scripts/install_scripts/install_tk1_settings.sh
+  ```
+in order to have the weight do :
+```bash
+roscd hsrb_darknet_tutorials
+scripts/install_scripts/get_yolo_data.sh
+```
+build them and after that install the package at this address : https://git.hsr.io/kazuto_murase/get_3d_position
+and change the file by the one on our github
+once this is done take the package on our github and build the workspace.
+In order to try YOLO you need to do the following
+-launch the gazebo simulator
+-do : ```bash roslaunch hsrb_darknet_tutorials default_model_demo.launch  ```
+- rosrun the get_3d_position
+-rosrun our package
 
 ***To run(for now)
 ```bash
