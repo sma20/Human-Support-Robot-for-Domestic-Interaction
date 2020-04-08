@@ -42,6 +42,12 @@ sudo apt-get install ros-kinetic-smach*
 *sudo apt-get install ffmpeg libav-tools
 *sudo pip install pyaudio
 ```
+***To run(for now)
+```bash
+rosrun speech_reco test.py
+rosrun speech_reco stop.py
+```
+
 ### YOLO Package PreRequisits
 In order to use YOLO with the hsr you first need to install this 3 package : 
 ```bash
@@ -60,19 +66,18 @@ roscd hsrb_darknet_tutorials
 scripts/install_scripts/get_yolo_data.sh
 ```
 build them and after that install the package at this address : https://git.hsr.io/kazuto_murase/get_3d_position
-and change the file ```bash get_3d_position.py ``` by the one on our github
+and change the file ```bash get_3d_position.py ``` by the one on our github.
+
 once this is done take the package semantic_hsr on our github and build the workspace.
-In order to try YOLO you need to do the following
+
+In order to try YOLO you need to do the following:
+
 -launch the gazebo simulator
--do : ```bash roslaunch hsrb_darknet_tutorials default_model_demo.launch  ```
+- do : ```bash roslaunch hsrb_darknet_tutorials default_model_demo.launch  ```
 - do : ```bash python get_3d_position.py ```
 - do : ```bash python csv_writer.py ```
 
-***To run(for now)
-```bash
-rosrun speech_reco test.py
-rosrun speech_reco stop.py
-```
+
 ## Packages descriptions
 ### Find_frontier
 
