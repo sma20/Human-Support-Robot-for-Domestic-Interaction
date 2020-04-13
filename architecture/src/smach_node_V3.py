@@ -67,6 +67,7 @@ def check_stop(event):
 #----------------------- SUBSCRIBER CALLBACKS ----------------------------------
 #----- Callback of chatter1, if there is a need to stop the processes
 def callback_stop(finish):
+    global STOP
     if 'stop' in finish.data:
 	STOP = True
 	print(finish.data)
