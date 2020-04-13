@@ -1,0 +1,8 @@
+bool start_set_goal          #to confirm start of service
+geometry_msgs/Point real_goal_position #position of the goal X
+int32 retry		   #if the reach position fail, to know it (and how many times)
+---
+geometry_msgs/Point position_goal      #goal position for the robot
+bool success                 #did the service succeed?
+
+

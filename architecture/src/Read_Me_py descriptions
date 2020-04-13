@@ -1,0 +1,27 @@
+Move.py
+Action movement to send a position to the hsr base
+
+set_goal_v3.py 
+First version of the get_closest_ accessible point service to an object
+with autonomous map recuperation.
+(previous versions in  rubbish)
+
+Ameliorations to be done: the goal may be in an object as a table or chair.
+So a "do something else " has to be added if goal innacessible.
+
+smach_node.py
+architecture of the actions.
+Get action :done.
+The rest....
+
+test_launch.py
+Test file to check to launch a roslaunch from a python file with a stop command coming from a topic. Success (to be put in rubbish when usefulness reaches 0)
+
+test_map_exploration.py
+TRASH, useless. But i'm keeping it there for now because... because i spent too much time on it so I'm hoping to maybe reuse it. TT
+
+test_pub.py
+Goes with test_launch.py. It's the stop topic publisher . 
+
+
+

@@ -1,0 +1,33 @@
+<launch>
+
+<!-- MAP PATH-->
+<!--    <arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/my_hw_map_changed.yaml"></arg> -->
+<arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/autosavedmap.yaml"></arg>
+    <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)"></node>
+
+<!--hsr_world launch (gazebo/rviz)-->
+<!--    <include file="$(find hsr_world)/launch/hsr_world.launch"/> -->
+
+<!--set_closest_goal service-->
+    <node pkg="architecture" type="set_goal_v3.py" name="set_closest_goal" output="screen"> </node>
+<!-- move service-->
+    <node pkg="architecture" type="move.py" name="move_to_goal" output="screen"> </node>
+
+<!-- smach server-->    
+    <node pkg="architecture" type="smach_node_V3.py" name="smach_example_state_machine" output="screen"> </node>
+ 
+<!-- launch YOLO -->    
+    <include file="$(find semantic_hsr)/launch/semantic_hsr.launch"/> 
+ 
+<!-- run urgent chatter (chatter1 for stop and danger) -->    
+    <node pkg="speech_reco" type="stop.py" name="stop"> </node> 
+
+<node pkg="tf" type="static_transform_publisher" name="tf_test" args="0 0 0 0 0 0 map odom 100">
+   <!--
+        rosrun tf view_frames
+        should have map->odom on the frame graph
+        this node is modifying the order of the elements of this graph
+        args: x y z raz pitch yaw parents child rate
+    -->
+    </node>
+</launch>

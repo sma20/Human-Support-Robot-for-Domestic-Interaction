@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="architecture" type="test_launch.py" name="search_map" output="screen"> </node>
+    <node pkg="architecture" type="test_pub.py" name="fake_pub" output="screen"> </node>
+
+   
+</launch>
