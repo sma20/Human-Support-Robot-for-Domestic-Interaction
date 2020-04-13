@@ -298,7 +298,7 @@ class search_map(smach.State):
         # 5min later
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
-	
+	job_done=False #we reset job_done
         if STOP == False: #ADD a topic that tells if it was successfully achieved in fct on not, to avoid doing this aimelessly. 
             real_goal_position=Point()
             for i in range(1,u):
@@ -445,6 +445,7 @@ class mapping(smach.State):
             i=0
         #rospy.sleep(60*5)
         # 5min later
+	job_done=False #reset job_done
         STOP=False #We reboot stop for next time, in case STOP=True
         rospy.loginfo("CLOOOOSE MAPING LAUNCH")
         launch.shutdown()
