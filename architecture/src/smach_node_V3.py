@@ -137,7 +137,7 @@ class reboot(smach.State):
         name_object= "x"
         action= "x"
         place= "x"
-        return rebooted
+        return 'rebooted'
 
 #---------------------------- SUB_GET State machine classes -----------------------------------------------------------------
 
