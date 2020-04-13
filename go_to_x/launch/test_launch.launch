@@ -1,7 +1,0 @@
-<launch>
-
-    <node pkg="go_to_x" type="test_launch.py" name="search_map" output="screen"> </node>
-    <node pkg="go_to_x" type="test_pub.py" name="fake_pub" output="screen"> </node>
-
-   
-</launch>
