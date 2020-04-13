@@ -292,7 +292,7 @@ class search_map(smach.State):
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
 
         #while delay not expired or the search isn't finished
-        while STOP==False or job_done==False:
+        while STOP==False and job_done==False:
             i=0
         #rospy.sleep(60*5)
         # 5min later
@@ -441,7 +441,7 @@ class mapping(smach.State):
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
 
         #while delay not expired or the search isn't finished
-        while STOP==False or job_done==False:
+        while STOP==False and job_done==False:
             i=0
         #rospy.sleep(60*5)
         # 5min later
