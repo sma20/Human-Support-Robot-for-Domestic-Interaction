@@ -4,11 +4,12 @@
 #The mapping is done with Hector mapping, using RTAbmap which allows to save in 2D a 3D image may be usefull. 
 #Beside this is the only function doing the mapping, a new remapping/update would be usefull. 
 #Finally, the robot must start from the same point eachtime since the rooms corners were entered manually. 
-# to automatize this "harris corner finder" could be the beginning of a solution (see in go_to_x/src/rubbish a 1st attempt) 
+# to automatize this "harris corner finder" could be the beginning of a solution (see in architecture/src/rubbish a 1st attempt) 
 
 import sys
 import rospy, time, tf
 import math as math
+import actionlib
 from nav_msgs.msg import Odometry, OccupancyGrid
 from find_frontier.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -16,9 +17,11 @@ from std_msgs.msg import Bool
 from tf.transformations import euler_from_quaternion,  quaternion_from_euler#
 from sensor_msgs.msg import LaserScan
 from threading import Thread
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import Queue
 import random
 import os 
+import sys
 
 WHEEL_RADIUS = 0.035
 DISTANCE_BETWEEN_WHEELS = 0.23
@@ -31,11 +34,10 @@ ROTATE_AROUND_GRANULARITY = 9
 LINEAR_VELOCITY = 0.20 #if the robot is too slow or fast, change that
 OBSTACLE_DETECTION_THRESHOLD = 0.75
 
-max_duration=60*20 #We can decide of the delay of this whole operation here
+max_duration=60*2 #We can decide of the delay of this whole operation here
 begin_time=0
 
-
-save_map_path='rosrun map_server map_saver -f /home/cata/hsr_ws2/src/go_to_x/map_tests/test1'
+save_map_path='rosrun map_server map_saver -f /home/cata/hsr_ws2/src/architecture/map_tests/autosavedmap'
 #---------------------------------------PID-----------------------------------------------
 #Impelements PID controller
 class PID:
@@ -369,7 +371,11 @@ def requestTrajectory(goalPos):
                     isNewTrajectoryReady = True
                 else:
                     rospy.loginfo("previousTrajectory = trajectory")
-                    rospy.sleep(7)
+                    destinationpoint= len(trajectory.path.poses)-1
+                    trajectory.path.poses[destinationpoint].pose.position.x = trajectory.path.poses[destinationpoint].pose.position.x+0.5
+                    trajectory.path.poses[destinationpoint].pose.position.y = trajectory.path.poses[destinationpoint].pose.position.y+0.5
+                    isNewTrajectoryReady = True
+                    #rospy.sleep(7)
 
 
 def publish_in_cmd(goal_begin):
@@ -392,7 +398,10 @@ def new_hsr_function(destination_x,destination_y):
     global exit
     yaw_control = PID(P=0.8, I=0.05, D=0.001, Derivator=0, Integrator=0, outMin=-1.5, outMax=1.5)
     goal_begin=PoseStamped()
-    
+    # initialize action client
+    cli = actionlib.SimpleActionClient('/move_base/move', MoveBaseAction)
+    # wait for the action server to establish connection
+    cli.wait_for_server()
     prev_destination_angle = math.atan2(destination_y - current_y, destination_x - current_x)
     initialDistance = math.sqrt((destination_x - current_x)**2 + (destination_y - current_y)**2)
     initial_x = current_x
@@ -422,10 +431,17 @@ def new_hsr_function(destination_x,destination_y):
     goal_begin.pose.position=Point(destination_x,destination_y, 0)
     quat = quaternion_from_euler(0, 0, 0)
     goal_begin.pose.orientation = Quaternion(*quat)
-    publish_in_cmd(goal_begin)
+    
+    goal = MoveBaseGoal()
+    goal.target_pose = goal_begin
+    #publish_in_cmd(goal_begin)
+    # send message to the action server
+    cli.send_goal(goal)
+
     abnormalTermination=False
     i=0
-
+    # wait for the action server to complete the order
+    cli.wait_for_result()
     while ((current_x > destination_x + POS_TOLERANCE or current_x < destination_x - POS_TOLERANCE) \
         or (current_y > destination_y + POS_TOLERANCE or current_y < destination_y - POS_TOLERANCE)) \
         and not math.sqrt((current_x - initial_x)**2 + (current_y - initial_y)**2) > initialDistance :
@@ -438,8 +454,9 @@ def new_hsr_function(destination_x,destination_y):
             goal_begin.pose.position=Point(current_x,current_y, 0)
             quat = quaternion_from_euler(0, 0, current_theta)
             goal_begin.pose.orientation = Quaternion(*quat)
-
-            publish_in_cmd(goal_begin)
+            goal.target_pose = goal_begin
+            cli.send_goal(goal)
+            #publish_in_cmd(goal_begin)
             abnormalTermination=True
             break            
         """
@@ -477,12 +494,20 @@ def executeTrajectory(control):
         isNewTrajectoryReady = False
 
         destinationpoint= len(oldTrajectoryPoses)-1
+        #Two points, in case the first one fails. 
+        """
+        intergoalX = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.x
+        intergoalY = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.y
+        """
         localGoalX = oldTrajectoryPoses[destinationpoint].pose.position.x
         localGoalY = oldTrajectoryPoses[destinationpoint].pose.position.y
-
-        print "Driving to: %f, %f" % (localGoalX, localGoalY)
+        """
+        print "Driving to: %f, %f" % (intergoalX, intergoalY)
         print "current position :%f, %f" % (current_x, current_y)
-
+        abnormalTermination =new_hsr_function(intergoalX,intergoalY)
+        """
+        print "Now driving to: %f, %f" % (localGoalX, localGoalY)
+        print "current position :%f, %f" % (current_x, current_y)
         abnormalTermination =new_hsr_function(localGoalX,localGoalY)
         
         reachedGoal = True
@@ -594,6 +619,8 @@ def check_duration(event):
     if (now-begin_time>max_duration):
         print "execution TOO LONG"
         exit=True
+        pub_job_done.publish(True) #once everything terminated, STOP
+        sys.exit()
         #rospy.is_shutdown()
 
     #print 'Timer called at ' + str(event.current_real)
@@ -602,9 +629,14 @@ def check_duration(event):
 
 #Main function
 if __name__ == "__main__":
-
+    
     #Initialize the new node
     rospy.init_node('control')
+
+    #this publisher will allow us to monitor the state of this whole function
+    pub_job_done = rospy.Publisher('job_done', Bool, queue_size=2)
+
+    pub_job_done.publish(False) #once everything terminated, STOP
     
     #Wait for trajectory service to start up
     print "Waiting for getTrajectory() service to start up...",
