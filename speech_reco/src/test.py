@@ -16,7 +16,7 @@ import os
 
 audio = record = aup = None
 
-action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
+action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'teaspoon', 'bring'],[ 'wallet', 'bring'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
 
 area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen','home' ]
 
@@ -56,7 +56,7 @@ def main():
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
-    print("hellow")
+    #print("hellow")
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
         #os.system("espeak 'Please say something'")
@@ -138,21 +138,27 @@ if __name__ == '__main__':
     text1 = text
 
     while True:
+        try:
+            if "yes" in text:
+                text = text1
+                break
+            elif "no" in text:
+                os.system("espeak 'can you please say it again'")
+                print("can you please say it again")
+                text = main()
+            else:
+                print(text)
+                resp = findresponse(text)
+                os.system("espeak '"+resp+"'")
+                print(resp)
+                text1 = text
+                text = main()
 
-        if "yes" in text:
-            text = text1
-            break
-        elif "no" in text:
-            os.system("espeak 'can you please say it again'")
-            print("can you please say it again")
-            text = main()
-        else:
-            print(text)
-            resp = findresponse(text)
-            os.system("espeak '"+resp+"'")
-            print(resp)
-            text1 = text
-            text = main()
+        except:
+                os.system("espeak 'can you please say it again'")
+                print("can you please say it again")
+                text = main()
+
 
 
 
