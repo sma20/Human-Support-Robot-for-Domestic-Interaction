@@ -38,9 +38,6 @@ def talker():
         if text is not None:
             if 'stop' in text:
                 pub.publish(text)
-                #os.system("espeak 'i am stopping")
-                rospy.on_shutdown(go_to_x)
-                print('I am stopping')
             elif 'danger' in text:
                 pub.publish(text)
                 #os.system("espeak 'i am shutting down")
