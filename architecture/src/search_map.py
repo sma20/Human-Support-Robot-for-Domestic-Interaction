@@ -27,7 +27,19 @@ max_duration=60*20 #max duration before considering something went wrong: 2min
 STOP=False
 endService=False
 start_check=True
+object_name='x'
+room='x'
 
+#Sunbul: it's great to write the callback... but if you create no subscriber, no publisher and don't use the global variables set there...
+#What you wrote is uncomplete. Creating a topic, that was it. Beside i explained to you that writing a name for the global variable then not using it but creating another local variable is... wrong.
+def callback(data):
+#This callback retrieve object and room from the architecture node to use it here.
+    global object_name, room
+    #execute actions
+    list = data.split(',')
+    object_name = list[0]
+    room = list[1]
+	
 #----------------------- ODOM CLASS -------------------
 #each time the class is called, the odom is updated
 class odometry:
@@ -244,14 +256,6 @@ def check_result(cli):
     #if (!cli.isActive())
     return 0
 
-def callback_action(data):
-    global thing_to_get, action, place
-    #execute actions
-    list = data.split(',')
-    object_name = list[0]
-    action = list[1]
-    place = list[2]
-
 def move_action(destination_x,destination_y, poseX,poseY):
     global POS_TOLERANCE
     global STOP
@@ -317,11 +321,14 @@ if __name__ == "__main__":
     pub_job_done = rospy.Publisher('job_done', Bool, queue_size=2)
 
     rospy.init_node('search_map_service', anonymous=True)
+    sub= rospy.Subscriber("room_object", String, callback)
     pub_job_done.publish(False) #once everything terminated, STOP
     global endService
     global goals_to_reachx
     global goals_to_reachy
     global begin_time
+    global room
+    global object_name
     odom= getodom()
 
     #----------------- start identify goal service ----------------------
@@ -335,8 +342,8 @@ if __name__ == "__main__":
     """
 
 
-    room="kitchen"
-    object_name="teaspoon"
+    #room="kitchen"
+    #object_name="teaspoon"
     #this callback gives back 2 arrays (x,y) of several goals to go to in the room/home
     #goals_to_reachx and y.
 
@@ -378,7 +385,7 @@ if __name__ == "__main__":
 	csvfile.close
 
 	for i in range(1,u):
-		if(object==M[u][0] and room==M[u][4]):
+		if(object_name==M[u][0] and room==M[u][4]):
 			print("object found")
 			k=1
 			break
