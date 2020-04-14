@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#NOTE: 
+#NOTE:
 #MAPPING- The map behing registered is called test1 and the mapping stops after 1 min, to change and take this map as reference for next uses
 #There is a time constraint IN Mapping and IN the state machine
 
@@ -9,6 +9,7 @@ import roslaunch
 import smach
 import smach_ros
 import math as math
+import test
 
 from architecture.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -40,7 +41,7 @@ place= "x"
 
 #Check the whole process time hasn't extended the maximum duration allowed
 #Sunbul: would be great to read the topic you created here to check if a "STOP" command was received to stop everything directly here
-#Daria: i did not implemented the stop command yet. its a tricky one. might have to make it a service and i dont know how to make google API a service.:D
+
 #This fct is not complete
 def check_stop(event):
 	global begin_time
@@ -50,7 +51,7 @@ def check_stop(event):
 	ros_time_now = rospy.Time.from_sec(time.time())
 	now=ros_time_now.to_sec()
 	#print now
-    
+
 	if (now-begin_time>max_duration):
 		print "execution TOO LONG"
 		STOP= True
@@ -71,23 +72,20 @@ def callback_stop(finish):
     if 'stop' in finish.data:
 	STOP = True
 	print(finish.data)
-    else:
-	print(finish.data)
-	switch_actions(finish.data) #sunbul, what is this for here?
 
 #----- callback of search_map class (to receive information if the job is been finished or not)
 def callback_job_done(finished):
     global job_done
     job_done= finished
-	
+
 #----- callback of chatter, there to extract the action, object and room (if relevant)
 def callback_action(data):
     global name_object, action, place
     #execute actions
     list = data.split(',')
-    name_object = list[0] 
-    action = list[1] 
-    place = list[2] 
+    name_object = list[0]
+    action = list[1]
+    place = list[2]
 
 
 #----------------------- ACTIONS machine class ----------------------------------
@@ -98,13 +96,13 @@ def switch_actions(action_choice):
 	    #Have to check if i can put strings here. Else ask sunbul to send a number instead of the word (as a string, that won't be a problem to convert)
             1:'mapping',
             2:'get',
-            3:'welcome', 
+            3:'welcome',
             #3:'find',
             #actions names
     }
     result=switcher.get(action,"nothing")
     return result
-    
+
 
 
 #Here we choose which action will be executed. maybe add a verification check with the user here
@@ -116,7 +114,7 @@ class choose_actions(smach.State):
         global action
         action=1
 
-        #subul, here you can run your python script 
+        test.main()#subul, here you can run your python script
         rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
 
 
@@ -127,7 +125,7 @@ class choose_actions(smach.State):
 
 
 
-#This function is there to avoid repeating twice the same action once the action finished. Before going to choose_action, we clean the global variables. 
+#This function is there to avoid repeating twice the same action once the action finished. Before going to choose_action, we clean the global variables.
 #We could also run a script asking if we want to shut-down hsr or issue a new command. (but that would be for you to do Sunbul)
 class reboot(smach.State):
     def __init__(self):
@@ -142,11 +140,11 @@ class reboot(smach.State):
 
 #---------------------------- SUB_GET State machine classes -----------------------------------------------------------------
 
-#Possible upgrade for move: Move service actually send a goal to a topic /goal. 
+#Possible upgrade for move: Move service actually send a goal to a topic /goal.
 #It could be possible to call it directly from the state machine see: http://library.isr.ist.utl.pt/docs/roswiki/smach(2f)Tutorials(2f)Calling(20)Actions.html
 
 # MOVE SERVICE (move.py) - It moves the base of the robot with obstacle avoidance as an action (once on, state= success)
-#parameters to enter: position x, y as a point 
+#parameters to enter: position x, y as a point
 #output: none
 
 #NOTE: want to change move by move_action. so if path not ok, we know it thanks to action status.
@@ -209,7 +207,7 @@ class search_closest_position(smach.State):
 
         response_set_goal = set_goal_service(request_object)
         print("received response")
-        if response_set_goal.success==False: 
+        if response_set_goal.success==False:
             print("can't find goal position, we have to implement a solution")
 
         #if we received a goal
@@ -222,10 +220,10 @@ class search_closest_position(smach.State):
         return 'position_found'
 
 
-# To create: a function that search in a file an object name and retrieve its position as a point       
+# To create: a function that search in a file an object name and retrieve its position as a point
 # parameters to enter: object, room (or home if any)
 # outputs: a position x,y,z as a point
-#Brieuc: you became the csv expert now ;) 
+#Brieuc: you became the csv expert now ;)
 #Sunul: extraction of the object name here
 
 class retrieve_position_object(smach.State):
@@ -235,10 +233,10 @@ class retrieve_position_object(smach.State):
     def execute(self,userdata):
 	global path_to_objects
 	global name_object, place
-	
+
 	data_file=path_to_objects
 	real_goal_position=Point()
-	
+
 	M=[]
 	u=0
 	with open(data_file) as csvfile:
@@ -247,7 +245,7 @@ class retrieve_position_object(smach.State):
         		M.append(row)
 			u=u+1
 	csvfile.close
-	k=0	
+	k=0
 	for i in range(1,u):
 		if(name_object==M[u][0] and place==M[u][4]):
 			real_goal_position.x=M[u][1]
@@ -269,12 +267,12 @@ class retrieve_position_object(smach.State):
 #Brieuc, Sunbul: read "search_map.py" , there is something for you there (retrieve room info + csv file search or yolo check)
 
 #input: nonne
-#output:nonne 
+#output:nonne
 class search_map(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['success','failure'], output_keys=['real_goal_position'])#,input_keys=['name_object']) #For the upgraded version
-    
-    
+
+
     def execute(self,userdata):
         global path_search_map
         global begin_time
@@ -287,7 +285,7 @@ class search_map(smach.State):
         #we launch a full roslaunch here to start this stuff
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_search_map])  
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_search_map])
         launch.start()
         rospy.loginfo("started")
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
@@ -300,7 +298,7 @@ class search_map(smach.State):
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
 	job_done=False #we reset job_done
-        if STOP == False: #ADD a topic that tells if it was successfully achieved in fct on not, to avoid doing this aimelessly. 
+        if STOP == False: #ADD a topic that tells if it was successfully achieved in fct on not, to avoid doing this aimelessly.
             real_goal_position=Point()
             for i in range(1,u):
                 if(name_object==M[u][0] and place==M[u][4]):
@@ -316,10 +314,10 @@ class search_map(smach.State):
                     userdata.real_goal_position = real_goal_position
                     return 'success'
         STOP=False #We reboot stop for next time, in case STOP=True
-        return 'failure'	
+        return 'failure'
 
 
-      
+
 
 #----------------------------- END SUB_GET CLASS ------------------------------------------
 
@@ -327,12 +325,12 @@ class search_map(smach.State):
 #The move service with a static point (always the same goal)
 
 # MOVE SERVICE (move.py) - It moves the base of the robot with obstacle avoidance as an action (once on, state= success)
-#parameters to enter: position x, y as a point 
+#parameters to enter: position x, y as a point
 #output: none
 class go_main_door(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['reached','not_reached'])
-            
+
     def execute(self,userdata):
 	door_posex=0.75
 	door_posey=-1 #Calculated by hand and specific to HW LAB. end corridor middle coordinates. Y -60cm to avoid the door opening on the robot
@@ -361,11 +359,11 @@ class go_main_door(smach.State):
         return 'reached'
 
 
-#Possible upgrade for move: Move service actually send a goal to a topic /goal. 
+#Possible upgrade for move: Move service actually send a goal to a topic /goal.
 #It could be possible to call it directly from the state machine see: http://library.isr.ist.utl.pt/docs/roswiki/smach(2f)Tutorials(2f)Calling(20)Actions.html
 
 # MOVE SERVICE (move.py) - It moves the base of the robot with obstacle avoidance as an action (once on, state= success)
-#parameters to enter: position x, y as a point 
+#parameters to enter: position x, y as a point
 #output: none
 
 #NOTE: want to change move by move_action. so if path not ok, we know it thanks to action status.
@@ -402,8 +400,8 @@ class move(smach.State):
 class check(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['person_recognized','person_not_recognized'])
-    
-    
+
+
     def execute(self,userdata):
 
         return 'person_recognized'
@@ -416,13 +414,13 @@ class check(smach.State):
 
 #----------------------------- SUB_MAP State machine Class --------------------------------------------
 #here the map is created, the robot moves autonomously in the room, map it with hector slam and save it in architecture/map_tests
-#FIND_FRONT.launch is launched here it's in find_frontier package. 
+#FIND_FRONT.launch is launched here it's in find_frontier package.
 #No inputs
 #No outputs
 class mapping(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['success','failure'])
-    
+
     def execute(self,userdata):
         global path_search_map
         global begin_time
@@ -436,7 +434,7 @@ class mapping(smach.State):
         #we launch a full roslaunch here to start this stuff
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_mapping])  
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_mapping])
         launch.start()
         rospy.loginfo("started")
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
@@ -470,13 +468,13 @@ def main():
     #open container actions
     with sm_actions:
 
-        smach.StateMachine.add('choose_actions', choose_actions(), 
+        smach.StateMachine.add('choose_actions', choose_actions(),
                                 transitions={'get':'GET','mapping':'MAPPING','welcome':'WELCOME','nothing':'REBOOT'}) #accompany  find
-        smach.StateMachine.add('REBOOT', reboot(), 
+        smach.StateMachine.add('REBOOT', reboot(),
                                 transitions={'rebooted':'choose_actions'}) #if you want to ask if hsr has to sleep. here you can
         # Create a GET state machine
         sm_get = smach.StateMachine(outcomes=['get_success', 'get_failure'])
-        
+
         sm_get.userdata.real_goal_position = Point()
         sm_get.userdata.position_goal= Point()
 
@@ -500,20 +498,20 @@ def main():
             smach.StateMachine.add('retrieve_position_object', retrieve_position_object(),transitions={'goal_found':'search_closest_position',
                                     'goal_not_found':'search_map'},
                                     remapping={'real_goal_position':'real_goal_position'})
-            
+
             #Search closest accessible point to the object
-            smach.StateMachine.add('search_closest_position', search_closest_position(), 
+            smach.StateMachine.add('search_closest_position', search_closest_position(),
                                     transitions={'position_found':'move'},
-                                    remapping={'real_goal_position':'real_goal_position', 
+                                    remapping={'real_goal_position':'real_goal_position',
                                                     'position_goal':'position_goal'})
             #Move toward object
-            smach.StateMachine.add('move', move(), 
-                            transitions={'success':'get_success', 
+            smach.StateMachine.add('move', move(),
+                            transitions={'success':'get_success',
                                         'fail':'get_failure'},
                             remapping={'position_goal':'position_goal'})
             #Search space to find the object
             smach.StateMachine.add('search_map', search_map(),transitions={'success':'search_closest_position',
-                                    'failure':'get_failure'},  
+                                    'failure':'get_failure'},
 				   remapping={'real_goal_position':'real_goal_position'})
 
 
@@ -533,17 +531,17 @@ def main():
 # Or if you don't succeed tell me your combined strategy if you want me to add it here.
 
         with sm_welcome:
-            #go at the door 
+            #go at the door
             smach.StateMachine.add('go_main_door',go_main_door(),transitions={'reached':'check_person',
                                 'not_reached':'go_main_door'})#Not a good idea to create a loop here, to change later on
 	        #move action
-            smach.StateMachine.add('move', move(), 
+            smach.StateMachine.add('move', move(),
                             transitions={'success':'welcome_success', #TO CHANGE. WAITING FOR YOUR CODES TO FILL THIS ARCHITECTURE
                                         'fail':'welcome_failure'},
                             remapping={'position_goal':'position_goal'})
             #check who is there
             #Brieuc, maybe adding the front door position in the CSV file would be usefull for going there
-            
+
             smach.StateMachine.add('check_person', check(),transitions={'person_recognized':'welcome_success',
                                 'person_not_recognized':'welcome_failure'}) #NOTE: welcome success and failure will have to be replace with the name of the next fct you want to call in State machine
 
@@ -555,16 +553,16 @@ def main():
 #---------------------------- END WELCOME State Machine -----------------------------
 
         #link between sm_action and sm_get. sm_get called by sm_actions
-        smach.StateMachine.add('GET', sm_get, 
+        smach.StateMachine.add('GET', sm_get,
                                 transitions={'get_success':'REBOOT', 'get_failure':'REBOOT'})
         #link between sm_action and sm_map. sm_map called by sm_actions
-        smach.StateMachine.add('MAPPING', sm_map, 
+        smach.StateMachine.add('MAPPING', sm_map,
                                 transitions={'map_success':'REBOOT', 'map_failure':'REBOOT'})
         #link between sm_action and sm_welcome called by sm_actions
-        smach.StateMachine.add('WELCOME', sm_welcome, 
+        smach.StateMachine.add('WELCOME', sm_welcome,
                                 transitions={'welcome_success':'REBOOT', 'welcome_failure':'REBOOT'})
-        
-        
+
+
         #initialization sm_action for the visualizer "rosrun smach_viewer smach_viewer.py"
         sis = smach_ros.IntrospectionServer('test_state_machine', sm_actions, '/Action_SM')
         sis.start()
