@@ -2,9 +2,9 @@
 #NOTE: if using an action to move REAL ROBOT. need to do "initialization self-position of the robot"
 
 
-#Brieuc: there may be a prob with the camera...the robot may be facing down, prob to detect anything on the tables. 
+#Brieuc: there may be a prob with the camera...the robot may be facing down, prob to detect anything on the tables.
 #option 1: we check for objects while the robot turn (a function to move head to add)
-#option 2:...we try and move the head while it moves. we have to search how to do that in going deep into how action work 
+#option 2:...we try and move the head while it moves. we have to search how to do that in going deep into how action work
 
 import rospy, time
 import roslib
@@ -37,7 +37,7 @@ class odometry:
         self.poseX=0
         self.poseY=0
         self.posew=0
-    
+
     def getPose(self,msg):
         """to get all the pose we need as part of the class"""
         self.poseX,self.poseY, self.posew = msg.pose.pose.position.x,msg.pose.pose.position.y, msg.pose.pose.orientation.w
@@ -83,19 +83,19 @@ def publish_once_in_cmd(speed):
 
     #rospy.loginfo("Cmd Published")
 
-#not to miss any objects around. 	 
+#not to miss any objects around.
 def turn():
     odom=getodom()
     speed=Twist()
     print("turn")
     """we do a 360
     """
-    
-    #make the robot turn 360 then move straight ahead 
+
+    #make the robot turn 360 then move straight ahead
     posex, posey, posew= odom.get()
     while abs(posew)>0.5 :
         #rospy.loginfo(duration)
-        speed.linear.x=0.0 
+        speed.linear.x=0.0
         speed.angular.z=0.3
         #pub.publish(speed)
         publish_once_in_cmd(speed)
@@ -106,7 +106,7 @@ def turn():
 
     while abs(posew)<0.98 :
         #rospy.loginfo(duration)
-        speed.linear.x=0.0 
+        speed.linear.x=0.0
         speed.angular.z=0.3
         #pub.publish(speed)
         publish_once_in_cmd(speed)
@@ -134,9 +134,9 @@ def convertPointToCell(goalx,goaly, gridOriginX, gridOriginY, resolution):
 
 #Converts cells to points
 def convertCellToPoint(x,y, cellOriginX, cellOriginY, resolution):
- 
+
     posx =  resolution*x + cellOriginX
-    posy =  resolution*y + cellOriginY 
+    posy =  resolution*y + cellOriginY
     return posx, posy
 
 #-------------------- FIND GOAL FCT ---------------------------------
@@ -147,15 +147,15 @@ def goals_points(xminc, xmaxc, yminc,ymaxc, matrix_map, resolution, gridOriginX,
 
 #We check the whole room. +6 ==30cm to be sure we don't try to enters the angles
 	for x in range(xminc+4, xmaxc):
-		for y in range(yminc+4,ymaxc):  
-			#print("data", map.data[x+y*map_sizeX])	
-			#We want the area to be free of objects		
+		for y in range(yminc+4,ymaxc):
+			#print("data", map.data[x+y*map_sizeX])
+			#We want the area to be free of objects
 			if matrix_map[x][y]==0 and matrix_map[x-1][y]==0 and matrix_map[x][y-1]==0 and matrix_map[x-1][y-1]==0 and  matrix_map[x+1][y+1]==0 and matrix_map[x+1][y]==0 and matrix_map[x+1][y-1]==0 and matrix_map[x][y+1]==0 and matrix_map[x-1][y+1]==0: #the extremities shouldn't be a problem
 				if matrix_map[x+2][y-1]==0 and matrix_map[x+2][y]==0 and matrix_map[x+2][y+1]==0 and matrix_map[x+2][y+2]==0 and matrix_map[x+1][y+2]==0 and matrix_map[x][y+2] ==0 and matrix_map[x-1][y+2]==0:
-					#map_division[x-left][y-down]=0 #just to visualize it 
-					if (len(goals_to_reach)== 0): #if there is already something in goals_to_reach, else prob 
+					#map_division[x-left][y-down]=0 #just to visualize it
+					if (len(goals_to_reach)== 0): #if there is already something in goals_to_reach, else prob
 						goals_to_reach.append([x, y])
-						
+
 					else:
 						#we check we haven't already a goal set around those parts, to avoid goals too close from one another
 						goal_too_close=False
@@ -185,7 +185,7 @@ def goals_points(xminc, xmaxc, yminc,ymaxc, matrix_map, resolution, gridOriginX,
 
 #CALLBACK MAP SUB (in service callback)
 def callback_map(map):
-    global endService  
+    global endService
     global goals_to_reachx
     global goals_to_reachy
     map_sizeX=map.info.width
@@ -241,9 +241,16 @@ def callback_map(map):
 
 #want to try and lift the head here (to see the objects well)
 def check_result(cli):
-    #if (!cli.isActive())  
-    return 0    
-    
+    #if (!cli.isActive())
+    return 0
+
+def callback_action(data):
+    global thing_to_get, action, place
+    #execute actions
+    list = data.split(',')
+    object_name = list[0]
+    action = list[1]
+    place = list[2]
 
 def move_action(destination_x,destination_y, poseX,poseY):
     global POS_TOLERANCE
@@ -258,7 +265,7 @@ def move_action(destination_x,destination_y, poseX,poseY):
 
 
     goal_begin=PoseStamped()
-    
+
     initial_x = poseX
     initial_y = poseY
     initialDistance = math.sqrt((destination_x - initial_x)**2 + (destination_y - initial_y)**2)
@@ -271,7 +278,7 @@ def move_action(destination_x,destination_y, poseX,poseY):
     goal_begin.pose.position=Point(destination_x,destination_y, 0)
     quat = quaternion_from_euler(0, 0, destination_angle)
     goal_begin.pose.orientation = Quaternion(*quat)
-    
+
     goal = MoveBaseGoal()
     goal.target_pose = goal_begin
 
@@ -281,7 +288,7 @@ def move_action(destination_x,destination_y, poseX,poseY):
     # wait for the action server to complete the order
     cli.wait_for_result()
 
-    #the result send a number corresponding to success or failure or what happened. 4: path avorted (something similar) 3:ok 0:ok? 
+    #the result send a number corresponding to success or failure or what happened. 4: path avorted (something similar) 3:ok 0:ok?
     #check_result(cli)
 
     #if delay passed we stop the robot here and there with the goal topic.
@@ -289,16 +296,16 @@ def move_action(destination_x,destination_y, poseX,poseY):
         odom= getodom()
         poseX,poseY, posew = odom.get()
         print("actual pose", poseX, poseY)
-        response_move = move_action(poseX, poseY, poseX, poseY)   
+        response_move = move_action(poseX, poseY, poseX, poseY)
         STOP=False
         #rospy.sleep(2)
-        
+
     # print result of navigation
     action_state = cli.get_state()
     if action_state == GoalStatus.SUCCEEDED:
         goodTermination=True
         print("goal reached")
-    
+
 
     return goodTermination
 
@@ -344,21 +351,21 @@ if __name__ == "__main__":
     rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
 
     #we go from 1 position to the next
-    for i in range(len(goals_to_reachx)):   
+    for i in range(len(goals_to_reachx)):
         #This begin_time is used to ensure that after a delay the action is stopped
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
 
         #check sake
         print("next goal:",goals_to_reachx[i],goals_to_reachy[i])
-        #check odom  
+        #check odom
         poseX,poseY, posew = odom.get()
-        #send goal to move action  
-        response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)    
-        turn()    
-        
+        #send goal to move action
+        response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)
+        turn()
+
 	#---------- check if object found ---------------------
 	global path_to_objects
-	
+
 	M=[]
 	u=0
 	data_file=path_to_objects
@@ -380,10 +387,9 @@ if __name__ == "__main__":
         """
         add here a check for the object in question.
 
-        Brieuc: search in csv file object in this room/ or check yolo output directly (may be faster to just check labels?) 
+        Brieuc: search in csv file object in this room/ or check yolo output directly (may be faster to just check labels?)
         """
 
 
     print ("end")
     pub_job_done.publish(True) #to stop the launch file
-
