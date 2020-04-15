@@ -1,6 +1,6 @@
 # HSR Domestic Interaction
 
-![Heriot Watt](https://github.com/sma20/HSR/tree/images/1200px-Heriot-Watt_University_logo.svg.png)
+![Heriot Watt](https://github.com/sma20/HSR/master/images/1200px-Heriot-Watt_University_logo.svg.png)
 
 The aim of the project is to enable the HSR to complet basic domestic interaction. With the help of several open source packages and our State Machine the robot can perform mapping, navigation, object reognition and mapping (semantic) as well as speech recognition and synthesis for set situations. The project provide an achritecure for human interaction. The template can be used for further investigation.
 
