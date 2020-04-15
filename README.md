@@ -1,4 +1,16 @@
-# HSR XXX
+# HSR Domestic Interaction
+
+photo heriot watt
+
+The aim of the project is to enable the HSR to complet basic domestic interaction. With the help of several open source packages and our State Machine the robot can perform mapping, navigation, object reognition and mapping (semantic) as well as speech recognition and synthesis for set situations. The project provide an achritecure for human interaction. The template can be used for further investigation.
+
+The entire project is achieved using ROS Kinetic/Melodic. The following packages are implemented using Python, SMACH, YOLO, Gooogle API , Espeak and HSR tools.
+
+
+photo HSR
+
+
+(descirption HSR Robot hardware)
 
 
 Change the plan how you see fit
