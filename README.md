@@ -6,6 +6,8 @@
 
 The aim of the project is to enable the HSR to complet basic domestic interaction. With the help of several open source packages and our State Machine the robot can perform mapping, navigation, object reognition and mapping (semantic) as well as speech recognition and synthesis for set situations. The project provide an achritecure for human interaction. The template can be used for further investigation.
 
+(archi with 3 parts)
+
 The entire project is achieved using ROS Kinetic/Melodic. The following packages are implemented using Python, SMACH, YOLO, Gooogle API , Espeak and HSR tools.
 
 
@@ -21,6 +23,11 @@ Change the plan how you see fit
 
 ## Presentation
 
+Photo archi
+(archi with 3 parts)
+
+
+
 ## Prerequisite
 You need to have Ros, Rviz, Gazebo installed on your laptop AND have the autorisation to install the HSR simulation.  
 
@@ -30,6 +37,11 @@ To use the state machine you need to have smach installed:
 sudo apt-get install ros-kinetic-smach*
 ```
 
+### Mapping Package PreRequisit
+xxxxxxx
+```bash
+sudo apt-get install ros-kinetic-smach*
+```
 ### Speech Recognition Package PreRequisits
 
 *installing Speech Recognition*
@@ -138,8 +150,7 @@ In XX.py
 ```python
 what to change here
 ```
-
-## Test
+## Launch
 
 to check the state machine the viewer is launched with:
 ```bash
@@ -147,8 +158,19 @@ to check the state machine the viewer is launched with:
 ```
 to launch the gazebo_world (HW lab) and rviz with hsr on it:
 ```bash
-  roslaunch find_frontier find_front.launch 
+  roslaunch hsr_world hsr_world.launch 
 ```
+
+## List of Task
+
+- [x] Hector Mapping 
+- [x] Navigation
+- [x] Object Recognition 
+- [x] Semantic Mapping
+- [x] Speech Recognition
+- [x] Speech Synthesis
+- [ ] Recognition of all the simulated objects
+- [ ] Architeture fully implemented
 
 
 ## Acknowledgment 
