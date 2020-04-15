@@ -62,9 +62,9 @@ install all the corposes.
 
 *Installing PyAudio*
 ```bash
-*sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
-*sudo apt-get install ffmpeg libav-tools
-*sudo pip install pyaudio
+sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+sudo apt-get install ffmpeg libav-tools
+sudo pip install pyaudio
 ```
 
 *for Text to Speech
@@ -79,6 +79,8 @@ rosrun speech_reco stop.py
 ```
 
 ### YOLO Package PreRequisits
+
+
 In order to use YOLO with the hsr you first need to install this 3 package : 
 ```bash
 git clone https://git.hsr.io/tmc/tmc_darknet.git
