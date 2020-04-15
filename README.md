@@ -20,22 +20,40 @@ sudo apt-get install ros-kinetic-smach*
 
 *installing Speech Recognition*
 ```bash
-*pip install SpeechRecognition or pip install speech-recognition or with pip3
+pip install SpeechRecognition
+```
+or 
+```bash
+pip install speech-recognition or with pip3
 ```
 *installing nltk*
+
+Install Setuptools: http://pypi.python.org/pypi/setuptools
+Install Pip:
 ```bash
-*Install Setuptools: http://pypi.python.org/pypi/setuptools
-*Install Pip: run sudo easy_install pip
-*Install Numpy (optional): run sudo pip install -U numpy
-*Install NLTK: run sudo pip install -U nltk
-*Test installation: run python then type import nltk
-* To install the package like stopwords, tokenize verbs, nouns, we need nltk packages
-* Open python or python3 on terminal
-* write the following script
-* import nltk
-* nltk.download()
-* install all the corposes.
+sudo easy_install pip
 ```
+Install Numpy (optional): run 
+```bash
+sudo pip install -U numpy
+```
+Install NLTK: run 
+```bash
+sudo pip install -U nltk
+```
+Test installation: run 
+```bash
+python then type import nltk
+```
+To install the package like stopwords, tokenize verbs, nouns, we need nltk packages
+Open python or python3 on terminal
+write the following script
+```
+import nltk
+nltk.download()
+```
+install all the corposes.
+
 
 *installing eSpeak*
 ```bash
@@ -50,9 +68,10 @@ sudo apt-get install ros-kinetic-smach*
 ```
 
 *for Text to Speech
+```
 sudo apt update
 sudo apt install python-espeak
-
+```
 ***To run(for now)
 ```bash
 rosrun speech_reco test.py
