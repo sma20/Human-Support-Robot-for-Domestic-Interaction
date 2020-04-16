@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 text1 = text
                 text = main()
 
-        except NoneType:
+        except :
                 os.system("espeak 'can you please say it again'")
                 print("can you please say it again")
                 text = main()
