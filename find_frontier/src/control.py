@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+#NOTE: if using an action to move REAL ROBOT. need to do "initialization self-position of the robot"
 
-#Amelioration: the move fct is a topic. An action may be a better idea.
+
 #The mapping is done with Hector mapping, using RTAbmap which allows to save in 2D a 3D image may be usefull. 
 #Beside this is the only function doing the mapping, a new remapping/update would be usefull. 
-#Finally, the robot must start from the same point eachtime since the rooms corners were entered manually. 
+#Finally, the robot must map from (0,0,0) each time since the rooms corners were entered manually. 
 # to automatize this "harris corner finder" could be the beginning of a solution (see in architecture/src/rubbish a 1st attempt) 
 
+#An amelioration would be to allow the robot to map from any starting point. 
 import sys
 import rospy, time, tf
 import math as math
@@ -34,7 +36,7 @@ ROTATE_AROUND_GRANULARITY = 9
 LINEAR_VELOCITY = 0.20 #if the robot is too slow or fast, change that
 OBSTACLE_DETECTION_THRESHOLD = 0.75
 
-max_duration=60*2 #We can decide of the delay of this whole operation here
+max_duration=60*20 #We can decide of the delay of this whole operation here
 begin_time=0
 
 save_map_path='rosrun map_server map_saver -f /home/cata/hsr_ws2/src/architecture/map_tests/autosavedmap'
@@ -94,7 +96,7 @@ class RobotControl:
     #Rotate 360 degrees
     def rotateAround(self):
         print("in rotate around")
-	N=random.randint(4, self.rotate_around_granularity+1)
+	N=random.randint(6, self.rotate_around_granularity+1) #added a random to allow a change after a rotation, if stuck
         for i in range(0, N):
             self.rotate(2 * math.pi/self.rotate_around_granularity)
 
@@ -441,12 +443,12 @@ def new_hsr_function(destination_x,destination_y):
     abnormalTermination=False
     i=0
     # wait for the action server to complete the order
-    cli.wait_for_result()
+    cli.wait_for_result(rospy.Duration(420))#4min
     while ((current_x > destination_x + POS_TOLERANCE or current_x < destination_x - POS_TOLERANCE) \
         or (current_y > destination_y + POS_TOLERANCE or current_y < destination_y - POS_TOLERANCE)) \
         and not math.sqrt((current_x - initial_x)**2 + (current_y - initial_y)**2) > initialDistance :
-        i+=1
-        if i>120000000 or exit==True:
+        i+=1 
+        if i>12000 or exit==True: #Really short lap time (we have wait for result, no need for a long wait)
 
             print("too long, stop action goal")
             goal_begin.header.stamp = rospy.Time.now()
@@ -494,32 +496,25 @@ def executeTrajectory(control):
         isNewTrajectoryReady = False
 
         destinationpoint= len(oldTrajectoryPoses)-1
-        #Two points, in case the first one fails. 
-        """
-        intergoalX = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.x
-        intergoalY = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.y
-        """
-        localGoalX = oldTrajectoryPoses[destinationpoint].pose.position.x
-        localGoalY = oldTrajectoryPoses[destinationpoint].pose.position.y
-        """
-        print "Driving to: %f, %f" % (intergoalX, intergoalY)
-        print "current position :%f, %f" % (current_x, current_y)
-        abnormalTermination =new_hsr_function(intergoalX,intergoalY)
-        """
+        
+        localGoalX = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.x
+        localGoalY = oldTrajectoryPoses[int(destinationpoint/2)].pose.position.y
+        
         print "Now driving to: %f, %f" % (localGoalX, localGoalY)
         print "current position :%f, %f" % (current_x, current_y)
         abnormalTermination =new_hsr_function(localGoalX,localGoalY)
         
         reachedGoal = True
         print("goal reached, stop")
+        """
         goal_begin=PoseStamped()
         goal_begin.header.stamp = rospy.Time.now()
         goal_begin.header.frame_id = "map"
         goal_begin.pose.position=Point(current_x,current_y, 0)
         quat = quaternion_from_euler(0, 0, current_theta)
         goal_begin.pose.orientation = Quaternion(*quat)
-
-        publish_in_cmd(goal_begin)
+        """
+        #publish_in_cmd(goal_begin)
         """
 
 
