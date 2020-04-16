@@ -33,14 +33,14 @@ Photo rqt des topics links
 
 The architecture is composed of 3 actions : "Mapping", "Get" and "Welcome" each chosen by vocal command, 
 eg. "Bring me a banana".
-The action = "Get"
-The object = "Banana"
-Where from ="Home"
-
+The action = "Get"  
+The object = "Banana"  
+Where from ="Home"  
+  
 eg. "Go check the door"
-Action = "Welcome"
-Object = "_"
-Where from ="_"
+Action = "Welcome"  
+Object = "_"  
+Where from ="_"  
 
 * "Mapping" does a mapping of the home (the doors must be open), yolo and vocal command to abort the mapping/stop hsr completely are on. Once the process finished (success or not) the map is saved.
 
