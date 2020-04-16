@@ -30,8 +30,6 @@ start_check=True
 object_name='x'
 room='x'
 
-#Sunbul: it's great to write the callback... but if you create no subscriber, no publisher and don't use the global variables set there...
-#What you wrote is uncomplete. Creating a topic, that was it. Beside i explained to you that writing a name for the global variable then not using it but creating another local variable is... wrong.
 def callback(data):
 #This callback retrieve object and room from the architecture node to use it here.
     global object_name, room
