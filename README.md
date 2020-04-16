@@ -15,9 +15,9 @@ The aim of the project is to enable the HSR to complet basic domestic interactio
 The entire project is achieved using ROS Kinetic/Melodic. The following packages are implemented using Python, SMACH, YOLO, Gooogle API , Espeak and HSR tools.
 
 
-
+<p align="center">
 <img src="https://github.com/sma20/HSR/blob/master/image/hsr-photo1-full.jpg " width="400" >
-
+</p>
 (descirption HSR Robot hardware)
 
 
