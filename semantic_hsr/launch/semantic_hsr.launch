@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-   
+  	<include file="$(find hsrb_darknet_tutorials)/launch/default_model_demo.launch" /> 
 	<node pkg="get_3d_position" type="get_3d_position.py" name="get_3d_position" output="screen"/>
   	<node pkg="semantic_hsr" type="csv_writer.py" name="csv_writer" output="screen"/>
 </launch>
