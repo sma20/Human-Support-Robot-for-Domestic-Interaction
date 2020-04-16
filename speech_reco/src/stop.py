@@ -34,6 +34,7 @@ def talker():
     while not rospy.is_shutdown():
         print('k')
         text=main()
+        text= text.lower()
         print(text)
         if text is not None:
             if 'stop' in text:
