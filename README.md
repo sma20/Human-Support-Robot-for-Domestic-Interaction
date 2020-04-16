@@ -42,7 +42,7 @@ Action = "Welcome"
 Object = "_"  
 Where from ="_"  
 
-* "Mapping" does a mapping of the home (the doors must be open), yolo and vocal command to abort the mapping/stop hsr completely are on. Once the process finished (success or not) the map is saved.
+* "Mapping" does a mapping of the home (the doors must be open), object recognition and vocal command are on (to abort the mapping or even stop hsr completely). Once the process finished (success or not) the map is saved.
 
 * "Get" searches in its semantic map if he knows this object and where it is. If yes, then it searches a free space close to it and move. If no, it searches the room concerned by the command and if the object is found the process end and the object position is returned, the closest accessible point found and the robot move.
 
