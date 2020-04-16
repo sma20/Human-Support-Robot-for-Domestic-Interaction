@@ -16,8 +16,8 @@
 <!-- smach server-->    
     <node pkg="architecture" type="smach_node_V3.py" name="smach_example_state_machine" output="screen"> </node>
  
-<!-- launch YOLO -->    
-    <include file="$(find semantic_hsr)/launch/semantic_hsr.launch"/> 
+<!-- launch YOLO -->   
+<!--    <include file="$(find semantic_hsr)/launch/semantic_hsr.launch"/> -->
  
 <!-- run urgent chatter (chatter1 for stop and danger) -->    
     <node pkg="speech_reco" type="stop.py" name="stop"> </node> 
