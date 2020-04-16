@@ -163,6 +163,10 @@ to launch the gazebo_world (HW lab) and rviz with hsr on it:
 ```bash
   roslaunch hsr_world hsr_world.launch 
 ```
+to launch the state machine, yolo and the speech recognition (stop.py):
+```bash
+  roslaunch architecture all.launch 
+```
 
 ## List of Task
 
