@@ -29,6 +29,25 @@ Change the plan how you see fit
 Photo archi
 (archi with 3 parts)
 
+Photo rqt des topics links 
+
+The architecture is composed of 3 actions : "Mapping", "Get" and "Welcome" each chosen by vocal command, 
+eg. "Bring me a banana".
+The action = "Get"
+The object = "Banana"
+Where from ="Home"
+
+eg. "Go check the door"
+Action = "Welcome"
+Object = "_"
+Where from ="_"
+
+* "Mapping" does a mapping of the home (the doors must be open), yolo and vocal command to abort the mapping/stop hsr completely are on. Once the process finished (success or not) the map is saved.
+
+* "Get" searches in its semantic map if he knows this object and where it is. If yes, then it searches a free space close to it and move. If no, it searches the room concerned by the command and if the object is found the process end and the object position is returned, the closest accessible point found and the robot move.
+
+* "Welcome" B,S: i let you write this part
+
 
 
 ## Prerequisite
