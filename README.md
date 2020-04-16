@@ -158,17 +158,7 @@ In order to try YOLO you need to do the following:
 - do : ```bash python csv_writer.py ```
 
 
-## Usage
 
-```python
-import etc
-what to launch here
-```
-Some package will have to be adapted to your paths.
-In XX.py
-```python
-what to change here
-```
 ## Launch
 
 to check the state machine the viewer is launched with:
@@ -179,10 +169,11 @@ to launch the gazebo_world (HW lab) and rviz with hsr on it:
 ```bash
   roslaunch hsr_world hsr_world.launch 
 ```
-to launch the state machine, yolo and the speech recognition (stop.py):
+to launch the state machine, yolo and the speech recognition (to stop the action or the machine):
 ```bash
   roslaunch architecture all.launch 
 ```
+Note: Some python files will have to be adapted to your paths as we use absolute paths. 
 
 ## List of Task
 
@@ -199,4 +190,4 @@ to launch the state machine, yolo and the speech recognition (stop.py):
 ## Acknowledgment 
 
 Some packages have been adapted from other githubs:
-* [Find_frontier]( https://github.com/bnurbekov/Turtlebot_Navigation) - Change made: it has been adapted to fit our robot, mean of motion, added a time limit, used hector mapping instead of gmapping and save the map autonomously. 
+* [Find_frontier]( https://github.com/bnurbekov/Turtlebot_Navigation) - Change made: it has been adapted to fit our robot, mean of motion, added a time limit, rearranged the goal setting, used Hector mapping (instead of gmapping), saved the map autonomously and arranged to call the whole process autonomously.
