@@ -32,7 +32,7 @@ Photo archi
 Photo rqt des topics links 
 
 The architecture is composed of 3 actions : "Mapping", "Get" and "Welcome" each chosen by vocal command, 
-eg. "Bring me a banana".
+eg. "Bring me a banana".  
 The action = "Get"  
 The object = "Banana"  
 Where from ="Home"  
