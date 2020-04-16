@@ -139,9 +139,6 @@ In order to try YOLO you need to do the following:
 - do : ```bash python csv_writer.py ```
 
 
-## Packages descriptions
-### Find_frontier
-
 ## Usage
 
 ```python
