@@ -34,13 +34,13 @@ You need to have Ros, Rviz, Gazebo installed on your laptop AND have the autoris
 ### State Machine Package PreRequisit
 To use the state machine you need to have smach installed:
 ```bash
-sudo apt-get install ros-kinetic-smach*
+sudo apt install ros-$ROS_DISTRO-smach*
 ```
 
 ### Mapping Package PreRequisit
-xxxxxxx
+To be able to map, you need Hector mapping:
 ```bash
-sudo apt-get install ros-kinetic-smach*
+sudo apt-get install ros-$ROS_DISTRO-hector*
 ```
 ### Speech Recognition Package PreRequisits
 
