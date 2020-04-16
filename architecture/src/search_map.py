@@ -13,7 +13,7 @@ import actionlib
 import numpy as np
 import sys
 from nav_msgs.msg import Odometry, OccupancyGrid, String
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from architecture.srv import find_goals, find_goalsResponse
