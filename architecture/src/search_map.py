@@ -12,7 +12,9 @@ import math as math
 import actionlib
 import numpy as np
 import sys
-from nav_msgs.msg import Odometry, OccupancyGrid, String
+import csv
+
+from nav_msgs.msg import Odometry, OccupancyGrid
 from std_msgs.msg import Bool, String
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -20,7 +22,7 @@ from architecture.srv import find_goals, find_goalsResponse
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
 
-path_to_objects="~/hsr_ws2/src/semantic_hsr/data/"
+data_file="/home/cata/hsr_ws2/src/semantic_hsr/data/semantic_map.csv"
 
 POS_TOLERANCE=0.1
 max_duration=60*20 #max duration before considering something went wrong: 2min
@@ -32,7 +34,8 @@ room='x'
 
 def callback(data):
 #This callback retrieve object and room from the architecture node to use it here.
-    global object_name, room
+    global object_name
+    global room
     #execute actions
     list = data.split(',')
     object_name = list[0]
@@ -316,17 +319,27 @@ def move_action(destination_x,destination_y, poseX,poseY):
 
 if __name__ == "__main__":
     #this publisher will allow us to monitor the state of this whole function
-    pub_job_done = rospy.Publisher('job_done', Bool, queue_size=2)
-
-    rospy.init_node('search_map_service', anonymous=True)
-    sub= rospy.Subscriber("room_object", String, callback)
-    pub_job_done.publish(False) #once everything terminated, STOP
-    global endService
+    #global endService
     global goals_to_reachx
     global goals_to_reachy
     global begin_time
-    global room
-    global object_name
+    #global data_file
+    #global room
+    #global object_name
+
+    pub_job_done = rospy.Publisher('job_done', Bool, queue_size=2)
+    pub_success = rospy.Publisher('object_pose',Point,queue_size=3)
+    rospy.init_node('search_map_service', anonymous=True)
+    sub= rospy.Subscriber("room_object", String, callback)
+    pub_job_done.publish(False) #once everything terminated, STOP
+
+    real_goal_position = Point()
+    real_goal_position.x=0
+    real_goal_position.y=0
+    real_goal_position.z=9000
+    #We send data there in case the whole search map is interupted abruptly
+    pub_success.publish(real_goal_position) #to send the object coordinates
+
     odom= getodom()
 
     #----------------- start identify goal service ----------------------
@@ -369,31 +382,29 @@ if __name__ == "__main__":
         turn()
 
 	#---------- check if object found ---------------------
-	global path_to_objects
 
-	M=[]
-	u=0
-	data_file=path_to_objects
-	k=0
-	with open(data_file) as csvfile:
-			reader = csv.reader(csvfile) # change contents to floats
-			for row in reader: # each row is a list
-				M.append(row)
-				u=u+1
-	csvfile.close
+    M=[]
+    k=0
+    with open(data_file) as csvfile:
+            reader = csv.reader(csvfile) # change contents to floats
+            for row in reader: # each row is a list
+                M.append(row)
+    csvfile.close
 
-	for i in range(1,u):
-		if(object_name==M[u][0] and room==M[u][4]):
-			print("object found")
-			k=1
-			break
-	if(k==0):
-		print("object not found")
-        """
-        add here a check for the object in question.
+    for i in range(1,len(M)):
+        if(object_name==M[i][0] and room==M[i][4]):
+            print("object found")
+            k=1
 
-        Brieuc: search in csv file object in this room/ or check yolo output directly (may be faster to just check labels?)
-        """
+            real_goal_position.x=M[i][1]
+            real_goal_position.y=M[i][2]
+            real_goal_position.z=M[i][3]
+            break
+    if(k==0):
+        print("object not found")
+
+
+    pub_success.publish(real_goal_position) #to send the object coordinates
 
 
     print ("end")

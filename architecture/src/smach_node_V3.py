@@ -9,6 +9,7 @@ import roslaunch
 import smach
 import smach_ros
 import math as math
+import csv
 
 from architecture.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -20,8 +21,8 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 path_mapping="/home/cata/hsr_ws2/src/find_frontier/launch/find_front.launch"
 #roslaunch search_map path
 path_search_map="/home/cata/hsr_ws2/src/architecture/launch/search_map.launch"
-#path to the csv file
-path_to_objects="~/hsr_ws2/src/semantic_hsr/test/"
+#path to the csv file containing objects and objects pose
+data_file="/home/cata/hsr_ws2/src/semantic_hsr/data/semantic_map.csv"
 
 #--time check global var--
 begin_time=0
@@ -31,11 +32,13 @@ STOP=False
 #--to check the execution of a launch file (search_map/mapping)
 job_done=False
 
+#--to retrieve action and such from the speech recognition callback
 name_object= "x"
 action= "x"
 place= "x"
 
-
+#--to retrieve object pose from search map launch
+object_pose = Point() 
 #------------------- TIME CHECK FCT ------------------------
 
 #Check the whole process time hasn't extended the maximum duration allowed
@@ -88,6 +91,12 @@ def callback_action(data):
     action = list[1] 
     place = list[2] 
 
+def callback_objectpose(data):
+    global object_pose
+    object_pose.x=data.x
+    object_pose.y=data.y
+    object_pose.z=data.z
+
 
 #----------------------- ACTIONS machine class ----------------------------------
 
@@ -128,7 +137,7 @@ class choose_actions(smach.State):
 
 #This function is there to avoid repeating twice the same action once the action finished. Before going to choose_action, we clean the global variables. 
 #We could also run a script asking if we want to shut-down hsr or issue a new command. (but that would be for you to do Sunbul)
-class reboot(smach.State):
+class reset(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['rebooted']) #we could add a clean stop of the hsr here
 
@@ -230,34 +239,33 @@ class retrieve_position_object(smach.State):
         smach.State.__init__(self, outcomes=['goal_found','goal_not_found'],
                                     output_keys=['real_goal_position'])
     def execute(self,userdata):
-	global path_to_objects
-	global name_object, place
-	
-	data_file=path_to_objects
-	real_goal_position=Point()
-	
-	M=[]
-	u=0
-	with open(data_file) as csvfile:
-    		reader = csv.reader(csvfile) # change contents to floats
-    		for row in reader: # each row is a list
-        		M.append(row)
-			u=u+1
-	csvfile.close
-	k=0	
-	for i in range(1,u):
-		if(name_object==M[u][0] and place==M[u][4]):
-			real_goal_position.x=M[u][1]
-			real_goal_position.y=M[u][2]
-			real_goal_position.z=M[u][3]
-			k=1
-			break
-	if(k==0):
-		print("Object not known")
-    		return 'goal_not_found'
-	else:
-		userdata.real_goal_position = real_goal_position
-		return 'goal_found'
+        global data_file
+        global name_object, place
+
+        real_goal_position=Point()
+
+        M=[]
+        with open(data_file) as csvfile:
+                reader = csv.reader(csvfile) # change contents to floats
+                for row in reader: # each row is a list
+                    M.append(row)
+        csvfile.close
+        k=0	
+
+        #Brieuc you didn't test your code... you can't hide it
+        for i in range(1,len(M)):
+            if(name_object==M[i][0] and place==M[i][4]):
+                real_goal_position.x=M[i][1]
+                real_goal_position.y=M[i][2]
+                real_goal_position.z=M[i][3]
+                k=1
+                break
+        if(k==0):
+            print("Object unknown")
+            return 'goal_not_found'
+        else:
+            userdata.real_goal_position = real_goal_position
+            return 'goal_found'
 
 
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
@@ -276,11 +284,15 @@ class search_map(smach.State):
         global path_search_map
         global begin_time
         global name_object, place
+        global STOP
+        global job_done
+        global object_pose
 
         rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
         #the roslaunch has been tested in test_launch, test again when we have the objects file
         sub = rospy.Subscriber('job_done', Bool, callback_job_done)
-        pub2 = rospy.Publisher('room_object',String,queue_size=2)
+        sub2 = rospy.Subscriber('object_pose',Point, callback_objectpose)
+        pub2 = rospy.Publisher('/room_object',String,queue_size=2) #we will send room and object to other node
         object_room= name_object +","+ place
         #we launch a full roslaunch here to start this stuff
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -299,23 +311,21 @@ class search_map(smach.State):
         # 5min later
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
         launch.shutdown()
-        job_done=False
-        if STOP == False: #ADD a topic that tells if it was successfully achieved in fct on not, to avoid doing this aimelessly. 
-            real_goal_position=Point()
-            for i in range(1,u):
-                if(name_object==M[u][0] and place==M[u][4]):
-                    real_goal_position.x=M[u][1]
-                    real_goal_position.y=M[u][2]
-                    real_goal_position.z=M[u][3]
-                    k=1
-                    break
-                if(k==0):
-                    print("Object not known")
-                    return 'failure'
-                else:
-                    userdata.real_goal_position = real_goal_position
-                    return 'success'
-        STOP=False #We reboot stop for next time, in case STOP=True
+        job_done=False #we reset job_done for next use
+        STOP=False #We RESET stop for next time, in case STOP=True
+        real_goal_position = Point()
+        #If the object was found in search map
+
+        if object_pose.z!=9000 :
+            real_goal_position.x = object_pose.x
+            real_goal_position.y = object_pose.y
+            real_goal_position.z = object_pose.z
+            userdata.real_goal_position = real_goal_position
+            print("proceed to search point to reach")
+            return 'success'
+
+        userdata.real_goal_position = real_goal_position
+        print("failure of the operation")
         return 'failure'	
 
 
@@ -327,15 +337,15 @@ class search_map(smach.State):
 #The move service with a static point (always the same goal)
 
 # MOVE SERVICE (move.py) - It moves the base of the robot with obstacle avoidance as an action (once on, state= success)
-#parameters to enter: position x, y as a point 
+#parameters to enter: NONE DOOR POSITION FIXED in this execute
 #output: none
 class go_main_door(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['reached','not_reached'])
             
     def execute(self,userdata):
-	door_posex=0.75
-	door_posey=-1 #Calculated by hand and specific to HW LAB. end corridor middle coordinates. Y -60cm to avoid the door opening on the robot
+        door_posex=0.75
+        door_posey=-1 #Calculated by hand and specific to HW LAB. end corridor middle coordinates. Y -60cm to avoid the door opening on the robot
         rospy.loginfo('Executing state move')
         #call service
         try:
@@ -447,7 +457,7 @@ class mapping(smach.State):
         #rospy.sleep(60*5)
         # 5min later
         job_done=False
-        STOP=False #We reboot stop for next time, in case STOP=True
+        STOP=False #We reset stop for next time, in case STOP=True
         rospy.loginfo("CLOOOOSE MAPING LAUNCH")
         launch.shutdown()
         return 'success'
@@ -472,8 +482,8 @@ def main():
     with sm_actions:
 
         smach.StateMachine.add('choose_actions', choose_actions(), 
-                                transitions={'get':'GET','mapping':'MAPPING','welcome':'WELCOME','nothing':'REBOOT'}) #accompany  find
-        smach.StateMachine.add('REBOOT', reboot(), 
+                                transitions={'get':'GET','mapping':'MAPPING','welcome':'WELCOME','nothing':'RESET'}) #accompany  find
+        smach.StateMachine.add('RESET', reset(), 
                                 transitions={'rebooted':'choose_actions'}) #if you want to ask if hsr has to sleep. here you can
         # Create a GET state machine
         sm_get = smach.StateMachine(outcomes=['get_success', 'get_failure'])
@@ -557,13 +567,13 @@ def main():
 
         #link between sm_action and sm_get. sm_get called by sm_actions
         smach.StateMachine.add('GET', sm_get, 
-                                transitions={'get_success':'REBOOT', 'get_failure':'REBOOT'})
+                                transitions={'get_success':'RESET', 'get_failure':'RESET'})
         #link between sm_action and sm_map. sm_map called by sm_actions
         smach.StateMachine.add('MAPPING', sm_map, 
-                                transitions={'map_success':'REBOOT', 'map_failure':'REBOOT'})
+                                transitions={'map_success':'RESET', 'map_failure':'RESET'})
         #link between sm_action and sm_welcome called by sm_actions
         smach.StateMachine.add('WELCOME', sm_welcome, 
-                                transitions={'welcome_success':'REBOOT', 'welcome_failure':'REBOOT'})
+                                transitions={'welcome_success':'RESET', 'welcome_failure':'RESET'})
         
         
         #initialization sm_action for the visualizer "rosrun smach_viewer smach_viewer.py"
