@@ -11,12 +11,13 @@ from std_msgs.msg import String
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
 import os
+from threading import Thread
 
 #rospy.init_node('speech_rec', anonymous=True)
 
 audio = record = aup = None
 
-action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'teaspoon', 'bring'],[ 'wallet', 'bring'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'get'], [ 'glasses', 'get'], [ 'door', 'check'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
+action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'teaspoon', 'bring'],[ 'wallet', 'bring'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'bring'], [ 'glasses', 'bring'], [ 'door', 'welcome'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
 
 area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen','home' ]
 
@@ -38,6 +39,7 @@ def talker(text):
             os.system("espeak 'I'm shutting down'")
             print('im shutting down')
         pub.publish(text)
+        break
         rate.sleep()
 
 
@@ -53,6 +55,7 @@ def unique_list(l):
     return ulist
 
 def main():
+    print("in test main")
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
@@ -122,15 +125,19 @@ def findresponse(text):
         for i in range(len(rvector)):
                 c+= l1[i]*l2[i]
         cosine = c / float((sum(l1)*sum(l2))**0.5)
-        print("similarity: ", cosine)
+        print#subul, here you can run your python script("similarity: ", cosine)
 
         if cosine > 0.5:
             return response
 
     return "Did you mean "+ text
 
-if __name__ == '__main__':
-    #while not rospy.is_shutdown():
+#if __name__ == '__main__':
+def start():
+    nouns = []
+    verbs = []
+    synonyms = []
+    task_comb = []
     os.system("espeak 'Hello Human, how are you today'")
     print("Hello Human, how are you today")
 
@@ -184,19 +191,14 @@ if __name__ == '__main__':
     """if 'shower' in text:
         text = text.replace('room','')
         text = text.replace('shower', 'showerroom')
-
     print(text)
-
     if 'rest' in text:
         text = text.replace('room','')
         text = text.replace('rest', 'restroom')
-
     print(text)
-
     if 'sleeping' in text:
         text = text.replace('room','')
         text = text.replace('sleeping', 'sleepingroom')
-
     print(text)"""
 
     #rospy.spin(10)
@@ -208,7 +210,6 @@ if __name__ == '__main__':
         grammar = r"""
             NBAR:
                 {<NN.*|JJ>*<NN.*>}  # Nouns and Adjectives, terminated with Nouns
-
             NP:
                 {<NBAR>}
                 {<NBAR><IN><NBAR>}  # Above, connected with in/of/etc...
@@ -228,10 +229,10 @@ if __name__ == '__main__':
 
 
         tree = chunker.parse(postoks)
-        stopwords = stopwords.words('english')
+        sw = stopwords.words('english')
 
         def leaves(tree):
-            """Finds NP (nounphrase) leaf nodes of a chunk tree."""
+            """Finds NP (nounphrase) leaf nodes \of a chunk tree."""
             for subtree in tree.subtrees(filter = lambda t: t.label()=='NP'):
                 yield subtree.leaves()
 
@@ -245,7 +246,7 @@ if __name__ == '__main__':
         def acceptable_word(word):
             """Checks conditions for acceptable word: length, stopword. We can increase the length if we want to consider large phrase"""
             accepted = bool(2 <= len(word) <= 40
-                and word.lower() not in stopwords)
+                and word.lower() not in sw)
             return accepted
 
 
@@ -309,6 +310,7 @@ if __name__ == '__main__':
         if len(nouns) == 0:
             task_comb = createIntentNounPairs(intents, intents)
 
+        breakcheck = 0
         count = 0
         for tc in task_comb:
             for a in action:
@@ -320,9 +322,13 @@ if __name__ == '__main__':
                     else:
                         print("do the action " , tc, "to/from", room)
                     count = 1
+                    if tc[1] == 'bring':
+                        tc[1] = '2'
                     t =  str(tc[0]) +", "+  str(tc[1]) +", "+ room
                     try:
                         talker(t)
+                        breakcheck = 1
+                        break
                     except rospy.ROSInterruptException:
                         pass
                 elif tc[1] == a[1]:
@@ -330,10 +336,17 @@ if __name__ == '__main__':
                     if tc[0] in area:
                         print("do the action " , tc, "to/from", tc[0])
                         #t = "do the action ,"+  str(tc)+ "to/from, "+ str(tc[0])
-
+                        if tc[1] == 'bring':
+                            tc[1] = '2'
+                        elif tc[1] == 'welcome':
+                            tc[1] = '3'
                         t = str(tc[0]) +", "+  str(tc[1]) +", "+ str(tc[0])
                         count = 1
+
                         try:
                             talker(t)
+                            break
                         except rospy.ROSInterruptException:
                             pass
+            if breakcheck == 1:
+                break
