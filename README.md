@@ -122,8 +122,8 @@ sudo apt install python-espeak
 ```
 ***To run(for now)
 ```bash
-rosrun speech_reco test.py
-rosrun speech_reco stop.py
+rosrun speech_reco thread.py
+///still have to put it in all.launch
 ```
 
 ### YOLO Package PreRequisits
