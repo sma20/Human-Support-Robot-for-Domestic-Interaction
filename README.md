@@ -123,6 +123,7 @@ sudo apt install python-espeak
 ***To run(for now)
 ```bash
 rosrun speech_reco thread.py
+say hello and then give command.
 ///still have to put it in all.launch
 ```
 
