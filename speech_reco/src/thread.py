@@ -6,9 +6,11 @@ import rospy
 import test
 import time
 import speech_recognition as sr
+from threading import Thread
 
 
 def callback():
+
     while True:
         text=main()
         print(text)
@@ -45,7 +47,13 @@ def main():
         print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
 
+#def execThread():
+#    thread1 = Thread(target=callback(),args=())
+    #thread1.daemon = True
+#    thread1.start()
+
 if __name__ == '__main__':
     #while not rospy.is_shutdown():
-
+    #execThread()
     text=callback()
+    #print('im here')
