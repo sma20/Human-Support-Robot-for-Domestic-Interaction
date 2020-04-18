@@ -10,6 +10,9 @@ import smach
 import smach_ros
 import math as math
 import csv
+import test
+import thread
+from threading import Thread
 
 from architecture.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -123,8 +126,10 @@ class choose_actions(smach.State):
     def execute(self,userdata):
         global action
         action=2
-
-        #subul, here you can run your python script 
+	
+        #sunbul speech python script calls here
+        thread1 = Thread(target=thread.callback,args=())
+        thread1.start()
         rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
 
 
