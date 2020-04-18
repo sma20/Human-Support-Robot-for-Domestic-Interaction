@@ -324,6 +324,10 @@ def start():
                     count = 1
                     if tc[1] == 'bring':
                         tc[1] = '2'
+                    elif tc[1] == 'welcome':
+                        tc[1] = '3'
+                    elif tc[1] == 'mapping':
+                        tc[1] = '1'
                     t =  str(tc[0]) +", "+  str(tc[1]) +", "+ room
                     try:
                         talker(t)
