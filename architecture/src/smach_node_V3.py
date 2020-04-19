@@ -128,8 +128,9 @@ class choose_actions(smach.State):
         action=2
 	
         #sunbul speech python script calls here
-        thread1 = Thread(target=thread.callback,args=())
-        thread1.start()
+        #thread1 = Thread(target=thread.callback,args=())
+        #thread1.start()
+	thread.execThread()
         rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
 
 
