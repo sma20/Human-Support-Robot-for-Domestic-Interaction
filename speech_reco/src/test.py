@@ -17,8 +17,7 @@ from threading import Thread
 
 audio = record = aup = None
 
-action = [[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'teaspoon', 'bring'],[ 'wallet', 'bring'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'bring'], [ 'glasses', 'bring'], [ 'door', 'welcome'], [ 'location', 'tell'], [ 'door', 'get'],['location','go']]
-
+action = [[ 'visitors', 'welcome'],[ 'visitors', 'welcome'],[ 'reading-glasses', 'bring'],[ 'ball', 'bring'],[ 'cola', 'bring'],[ 'pringles', 'bring'],[ 'ringles', 'bring'],[ 'crackers', 'bring'],[ 'soda', 'bring'],[ 'pillow', 'bring'],[ 'phone', 'bring'],[ 'bottle', 'bring'],[ 'apple', 'bring'],[ 'banana', 'bring'],[ 'fruit', 'bring'],[ 'sprite', 'bring'],[ 'spoon', 'bring'],[ 'mug', 'bring'],[ 'medicine-box', 'bring'],[ 'cup', 'bring'],[ 'milk', 'get'],[ 'water', 'get'],[ 'coke', 'get'],[ 'snacks', 'get'],[ 'tv-remote', 'get'],[ 'TV', 'turn on'],[ 'Tele Vision', 'turn on'],[ 'teaspoon', 'bring'],[ 'wallet', 'bring'],[ 'LED', 'turn on'],[ 'LCD', 'turn on'],[ 'sounds', 'turn on'],[ 'toaster', 'turn on'],[ 'microwave', 'turn on'],[ 'oven', 'turn on'],[ 'lights', 'turn on'],[ 'newspaper', 'get'], [ 'book', 'bring'], [ 'glasses', 'bring'], [ 'door', 'welcome'],[ 'door', 'check'],[ 'visitor', 'check'], [ 'location', 'tell'],['location','go']]
 area = [ 'bedroom', 'livingroom', 'bathroom','toilet','showerroom','restroom' 'sleepingroom', 'kitchen','home' ]
 
 
@@ -324,7 +323,7 @@ def start():
                     count = 1
                     if tc[1] == 'bring':
                         tc[1] = '2'
-                    elif tc[1] == 'welcome':
+                    elif tc[1] == 'check':
                         tc[1] = '3'
                     elif tc[1] == 'mapping':
                         tc[1] = '1'
@@ -342,7 +341,7 @@ def start():
                         #t = "do the action ,"+  str(tc)+ "to/from, "+ str(tc[0])
                         if tc[1] == 'bring':
                             tc[1] = '2'
-                        elif tc[1] == 'welcome':
+                        elif tc[1] == 'check':
                             tc[1] = '3'
                         elif tc[1] == 'mapping':
                             tc[1] = '1'
