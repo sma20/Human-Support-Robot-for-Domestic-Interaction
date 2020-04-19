@@ -9,7 +9,7 @@ import speech_recognition as sr
 from threading import Thread
 
 
-def callback():
+def start_test():
 
     while True:
         text=main()
@@ -47,13 +47,13 @@ def main():
         print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
 
-#def execThread():
-#    thread1 = Thread(target=callback(),args=())
+def execThread():
+    thread1 = Thread(target=callback(),args=())
     #thread1.daemon = True
-#    thread1.start()
+    thread1.start()
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     #while not rospy.is_shutdown():
     #execThread()
-    text=callback()
+    #text=start_test()
     #print('im here')
