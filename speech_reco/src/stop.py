@@ -9,7 +9,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from std_msgs.msg import String
-import os
+
 
 #rospy.init_node('speech_rec', anonymous=True)
 
@@ -34,9 +34,10 @@ def talker():
     while not rospy.is_shutdown():
         print('k')
         text=main()
-        text= text.lower()
+       
         print(text)
         if text is not None:
+            text= text.lower()
             if 'stop' in text:
                 pub.publish(text)
             elif 'danger' in text:
