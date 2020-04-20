@@ -17,6 +17,7 @@ The entire project is achieved using ROS Kinetic/Melodic. The following packages
 <p align="center">
 <img src="https://github.com/sma20/HSR/blob/master/image/hsr-photo1-full.jpg " width="400" >
 </p>
+
 ## Hardware Description
 "
 Human Support Robot (HSR) developed by TOYOTA is a living support robot that assists handicapped and elderly people in everyday life. It has different advanced capabilities, such as: self-localization, recognition based failure avoidance, and motion planning. It can pick up objects placed on the oor and from shelves at different heights. HSR has four cameras and three sensors as shown in Fig. 3. The roles of cameras and sensors aredescribed as follows:
