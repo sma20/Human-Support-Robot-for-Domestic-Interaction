@@ -17,12 +17,21 @@ The entire project is achieved using ROS Kinetic/Melodic. The following packages
 <p align="center">
 <img src="https://github.com/sma20/HSR/blob/master/image/hsr-photo1-full.jpg " width="400" >
 </p>
-(descirption HSR Robot hardware)
 
+"
+Human Support Robot (HSR) developed by TOYOTA is a living support robot that assists handicapped and elderly people in everyday life. It has different advanced capabilities, such as: self-localization, recognition based failure avoidance, and motion planning. It can pick up objects placed on the oor and from shelves at different heights. HSR has four cameras and three sensors as shown in Fig. 3. The roles of cameras and sensors aredescribed as follows:
+* RGB-D sensor: It obtains color image and depth image. It can be used to
+recognize objects and environments.
+* Wide-angle camera: It obtains a wide-angle view image of horizontal 135.
+* Stereo camera: It obtains the distance information of the object from the
+parallax of the left and right camera images.
+* IMU sensor: It obtains acceleration and angular velocity of HSR.
+* Force-Torque sensor: It obtains the force and torque acting on the wrist.
+* Laser range sensor: It obtains the distance information of ambient environ-
+ment with a horizontal scan angle 250°.
 
-Change the plan how you see fit
-
-
+"
+HSR description made by DSPL Robocup@Home Team on https://emlab.jimdo.com/
 
 ## Presentation
 
