@@ -45,9 +45,7 @@ object_pose = Point()
 #------------------- TIME CHECK FCT ------------------------
 
 #Check the whole process time hasn't extended the maximum duration allowed
-#Sunbul: would be great to read the topic you created here to check if a "STOP" command was received to stop everything directly here
-#Daria: i did not implemented the stop command yet. its a tricky one. might have to make it a service and i dont know how to make google API a service.:D
-#This fct is not complete
+
 def check_stop(event):
 	global begin_time
 	global max_duration
@@ -106,7 +104,7 @@ def callback_objectpose(data):
 #space for improvement, could replace the string by functions here (maybe to check if that is the wanted action)
 def switch_actions(action_choice):
     switcher={
-	    #Have to check if i can put strings here. Else ask sunbul to send a number instead of the word (as a string, that won't be a problem to convert)
+	    #it will send the numbers in a string now.
             1:'mapping',
             2:'get',
             3:'welcome', 
@@ -141,8 +139,7 @@ class choose_actions(smach.State):
 
 
 
-#This function is there to avoid repeating twice the same action once the action finished. Before going to choose_action, we clean the global variables. 
-#We could also run a script asking if we want to shut-down hsr or issue a new command. (but that would be for you to do Sunbul)
+#This function is there to avoid repeating twice the same action once the action finished.
 class reset(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['rebooted']) #we could add a clean stop of the hsr here
@@ -277,7 +274,7 @@ class retrieve_position_object(smach.State):
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
 #SEARCH_MAP.launch /search_map.py and map_exploration_service_v2.py -
 #Search goals in the room/home and then send it to the move action.
-#Brieuc, Sunbul: read "search_map.py" , there is something for you there (retrieve room info + csv file search or yolo check)
+#Brieuc read "search_map.py" , there is something for you there (retrieve room info + csv file search or yolo check)
 
 #input: nonne
 #output:nonne 
@@ -545,8 +542,6 @@ def main():
 
 #---------------------------- WELCOME State Machine ---------------------------------
 
-
-#Brieuc, Sunbul: in this new class you will have to enter your functions here
 # Or if you don't succeed tell me your combined strategy if you want me to add it here.
 
         with sm_welcome:
@@ -566,7 +561,6 @@ def main():
 
             #ADD YOUR STATE MACHINE FCTS
 
-            #Brieuc, Sunbul, you are the one that can do this part of the archi.
 
 
 #---------------------------- END WELCOME State Machine -----------------------------
