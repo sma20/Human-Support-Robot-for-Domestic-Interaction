@@ -46,7 +46,7 @@ Where from ="_"
 
 * "Get" searches in its semantic map if he knows this object and where it is. If yes, then it searches a free space close to it and move. If no, it searches the room concerned by the command and if the object is found the process end and the object position is returned, the closest accessible point found and the robot move.
 
-* "Welcome" B,S: i let you write this part
+* "Welcome" works when the user asks the robot to go and check the door. Through our Speech Recognition and Synthesis we enable the robot to welcome the visitor. #Brieuc please add the human recognition plan.
 
 
 
