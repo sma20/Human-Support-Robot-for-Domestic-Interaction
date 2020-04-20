@@ -40,9 +40,6 @@ HSR description made by DSPL Robocup@Home Team on https://emlab.jimdo.com/
 <img src="https://github.com/sma20/HSR/blob/master/image/NEW%20smach.png" width="400" >
 </p>
 
-
-Photo rqt des topics links 
-
 The architecture is composed of 3 actions : "Mapping", "Get" and "Welcome" each chosen by vocal command,  
 eg. "Bring me a banana".  
 The action = "Get"  
