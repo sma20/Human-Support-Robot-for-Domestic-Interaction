@@ -36,8 +36,10 @@ HSR description made by DSPL Robocup@Home Team on https://emlab.jimdo.com/
 
 ## Presentation
 
-Photo archi
-(archi with 3 parts)
+<p align="center">
+<img src="https://github.com/sma20/HSR/blob/master/image/NEW%20smach.png" width="400" >
+</p>
+
 
 Photo rqt des topics links 
 
