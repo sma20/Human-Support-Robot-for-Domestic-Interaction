@@ -14,9 +14,12 @@ def start_test():
     while True:
         text=main()
         print(text)
+        print('teeest')
         if text is not None:
             text= text.lower()
+            print(text)
             if 'hello' in text:
+                print("thre")
                 test.start()
             else:
                 pass
@@ -26,6 +29,7 @@ def main():
     global audio, record, aup
     # obtain audio from the microphone
     r = sr.Recognizer()
+    print("test1")
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
         print("Say something!")
@@ -46,14 +50,23 @@ def main():
     except sr.RequestError as e:
         print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
-
-def execThread():
-    thread1 = Thread(target=callback(),args=())
+    
+def exec_thread():
+    print("in")
+    thread1 = Thread(target=start_test(),args=())
     #thread1.daemon = True
     thread1.start()
+
+if __name__ == '__main__':
+    rospy.init_node('hello_thread', anonymous=True)
+    exec_thread()
+
 
 #if __name__ == '__main__':
     #while not rospy.is_shutdown():
     #execThread()
     #text=start_test()
-    #print('im here')
+    print('im here')
+
+
+

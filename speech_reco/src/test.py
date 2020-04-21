@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import sys
 import rospy
 from std_msgs.msg import String
@@ -30,7 +28,7 @@ task_comb = []
 def talker(text):
     pub = rospy.Publisher('chatter', String, queue_size=10)
     #pub1 = rospy.Publisher('check_stop', String, queue_size=10)
-    rospy.init_node('speech_rec', anonymous=True)
+    #rospy.init_node('speech_rec', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         if 'stop' in text:
@@ -86,7 +84,6 @@ def main():
     for i in nouns:
         if nouns[i] == row[2]:
             action = row['action']
-
 if action.contains('BRING_MILK'):
     print ("call the method to bring the milk")"""
 
