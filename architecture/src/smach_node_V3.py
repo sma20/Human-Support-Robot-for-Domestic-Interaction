@@ -88,6 +88,7 @@ def callback_job_done(finished):
 	
 #----- callback of chatter, there to extract the action, object and room (if relevant)
 def callback_action(data):
+    print("in callback action")
     global name_object, action, place
     #execute actions
     list = data.split(',')
@@ -126,13 +127,17 @@ class choose_actions(smach.State):
 
     def execute(self,userdata):
         global action
-        action=2
-	
+        #action=2
+        print("choose action now")
         #sunbul speech python script calls here
         #thread1 = Thread(target=thread.callback,args=())
         #thread1.start()
-	thread.execThread()
-        rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
+        while action=='x':
+            rospy.sleep(2)
+        print(action)
+        print(name_object)
+
+        
 
 
 
@@ -475,6 +480,7 @@ class mapping(smach.State):
 def main():
     rospy.init_node('smach_example_state_machine')
     print("first_smach_on")
+    rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
     sub = rospy.Subscriber('job_done', Bool, callback_job_done)
     #rospy.Subscriber("chatter", String, callback_action) #get as a string the action, object, room (if pertinent)
     rospy.Subscriber("chatter1", String, callback_stop) #receive the stop or ultra stop here to stop what is ongoing or everything.
