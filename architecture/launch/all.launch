@@ -1,8 +1,12 @@
 <launch>
 
 <!-- MAP PATH-->
-<!--    <arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/my_hw_map_changed.yaml"></arg> -->
-<arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/autosavedmap.yaml"></arg>
+    <!-- Test map -good map- -->
+    <arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/my_hw_map_changed.yaml"></arg> 
+
+    <!-- Map saved during the mapping -->
+    <!-- <arg name="map_file" value="/home/cata/hsr_ws2/src/architecture/map_tests/autosavedmap.yaml"></arg> -->
+
     <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)"></node>
 
 <!--hsr_world launch (gazebo/rviz)-->
@@ -23,7 +27,7 @@
     <node pkg="speech_reco" type="stop.py" name="stop"> </node> 
 
 <!-- run a thread to listen to a vocal command -action,object,place- key word of activation "hello"-->
-    <node pkg="speech_reco" type="thread.py" name="hello_thread"> </node> 
+<!--    <node pkg="speech_reco" type="thread.py" name="hello_thread"> </node> -->
 
 <node pkg="tf" type="static_transform_publisher" name="tf_test" args="0 0 0 0 0 0 map odom 100">
    <!--
