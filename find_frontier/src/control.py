@@ -443,12 +443,12 @@ def new_hsr_function(destination_x,destination_y):
     abnormalTermination=False
     i=0
     # wait for the action server to complete the order
-    cli.wait_for_result(rospy.Duration(420))#4min
+    cli.wait_for_result(rospy.Duration(240))#4min
     while ((current_x > destination_x + POS_TOLERANCE or current_x < destination_x - POS_TOLERANCE) \
         or (current_y > destination_y + POS_TOLERANCE or current_y < destination_y - POS_TOLERANCE)) \
         and not math.sqrt((current_x - initial_x)**2 + (current_y - initial_y)**2) > initialDistance :
         i+=1 
-        if i>12000 or exit==True: #Really short lap time (we have wait for result, no need for a long wait)
+        if i>10 or exit==True: #Really short lap time (we have wait for result, no need for a long wait)
 
             print("too long, stop action goal")
             goal_begin.header.stamp = rospy.Time.now()
@@ -502,10 +502,10 @@ def executeTrajectory(control):
         
         print "Now driving to: %f, %f" % (localGoalX, localGoalY)
         print "current position :%f, %f" % (current_x, current_y)
-        abnormalTermination =new_hsr_function(localGoalX,localGoalY)
+        abnormalTermination = new_hsr_function(localGoalX,localGoalY)
         
         reachedGoal = True
-        print("goal reached, stop")
+        print("goal reached or not, stop")
         """
         goal_begin=PoseStamped()
         goal_begin.header.stamp = rospy.Time.now()
