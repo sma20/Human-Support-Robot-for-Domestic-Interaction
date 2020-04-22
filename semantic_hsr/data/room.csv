@@ -1,6 +1,7 @@
 room,xmin,xmax,ymin,ymax
-Corridor,-1,0.5,-3.2,0
-Kitchen,0.5,5,0,3.5
-Bathroom,0.5,3.1,-3.2,0
-Bedroom,3.1,8,-3.2,0
-Living_room,5,8,0,3.5
+home,-1,8,-3.2,3.5
+corridor,-1,0.5,-3.2,0
+kitchen,0.5,4,0,3.5
+bathroom,0.5,3.1,-3.2,0
+bedroom,3.1,8,-3.2,0
+living_room,4,8,0,3.5
