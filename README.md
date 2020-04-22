@@ -1,4 +1,4 @@
-# HSR Domestic Interaction
+# Human Support Robot for Domestic Interaction
 
 <div style="text-align:center">
 <p align="center">
