@@ -13,7 +13,6 @@ import actionlib
 import numpy as np
 import sys
 import csv
-
 from nav_msgs.msg import Odometry, OccupancyGrid
 from std_msgs.msg import Bool, String
 from actionlib_msgs.msg import GoalStatus
@@ -21,10 +20,13 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from architecture.srv import find_goals, find_goalsResponse
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler#
-
+#path to the csv file containing objects and objects pose
 data_file="/home/cata/hsr_ws2/src/semantic_hsr/data/semantic_map.csv"
 
+room_file="/home/cata/hsr_ws2/src/semantic_hsr/data/room.csv"
+
 POS_TOLERANCE=0.1
+begin_time=0
 max_duration=60*20 #max duration before considering something went wrong: 2min
 STOP=False
 endService=False
@@ -32,14 +34,19 @@ start_check=True
 object_name='x'
 room='x'
 
-def callback(data):
+def callback(msg):
 #This callback retrieve object and room from the architecture node to use it here.
     global object_name
     global room
-    #execute actions
-    list = data.split(',')
-    object_name = list[0]
-    room = list[1]
+    #print (msg)
+    
+    list1 = msg.data.split(',')
+    object_name = str(list1[0])
+    room = str(list1[1])
+    """
+    object_name='chair'
+    room='kitchen'
+    """
 	
 #----------------------- ODOM CLASS -------------------
 #each time the class is called, the odom is updated
@@ -82,6 +89,7 @@ def check_stop(event):
 
 #---------------------- TURN HSR FCT ------------------------------
 def publish_once_in_cmd(speed):
+    global STOP
     """
     This is because publishing in topics sometimes fails the first time you publish.
     In continuous publishing systems, this is no big deal, but in systems that publish only
@@ -89,9 +97,9 @@ def publish_once_in_cmd(speed):
     """
     pub= rospy.Publisher("/hsrb/command_velocity_teleop",Twist,queue_size=4)
 
-    while pub.get_num_connections() == 0:
-        rospy.sleep(0.1)
-    print ("Connected")
+    while pub.get_num_connections() == 0 and STOP==False:
+        pass
+    #print ("Connected")
     pub.publish(speed)
 
     #rospy.loginfo("Cmd Published")
@@ -201,6 +209,8 @@ def callback_map(map):
     global endService
     global goals_to_reachx
     global goals_to_reachy
+    global room
+    global object_name
     map_sizeX=map.info.width
     map_sizeY=map.info.height
     resolution= map.info.resolution
@@ -212,22 +222,51 @@ def callback_map(map):
     """
     #list_map= list(map.data)
 
-    #Brieuc: to take it off once you got your topic, add here the extraction of x y of the room
-    #test with kitchen FOR THE MOMENT------------------------------------------------
+    
+    #test with kitchen FOR THE MOMENT-----
+    """
     xmin=0.5
     xmax=5
     ymin=0
     ymax=3.5
-
+    """
+    #the extraction of x y of the room
+    angles=[]
+    k=0
+    with open(room_file) as csvfile:
+            reader = csv.reader(csvfile) # change contents to floats
+            for row in reader: # each row is a list
+                angles.append(row)
+    csvfile.close
+    print("object and room to search:",object_name, room)
+    for i in range(1,len(angles)):
+        if(room==str(angles[i][0])):
+            print("room angles extracted")
+            k=1
+            xmin=float(angles[i][1])
+            xmax=float(angles[i][2])
+            ymin=float(angles[i][3])
+            ymax=float(angles[i][4])
+            print("xmin,max,ymin,max", xmin, xmax, ymin, ymax)
+    if k!=1:
+        print ("we couldn't find the specified room, let's explore the whole home")
+        #Home coordinates
+        room = 'home'
+        xmin=float(angles[1][1])
+        xmax=float(angles[1][2])
+        ymin=float(angles[1][3])
+        ymax=float(angles[1][4])
 
     xminc,yminc=convertPointToCell(xmin,ymin, gridOriginX, gridOriginY, resolution)
     xmaxc,ymaxc=convertPointToCell(xmax,ymax, gridOriginX, gridOriginY, resolution)
-    """
-    testx,testy=convertCellToPoint(xminc,yminc, cellOriginX, cellOriginY, resolution)
-    print("xmin,ymin",xmin,ymin)
-    print("xminc,yminc",xminc,yminc)
+    
+    
+    testx,testy=convertCellToPoint(xmaxc,ymaxc, cellOriginX, cellOriginY, resolution)
+
+    print("xmin,ymin",xmax,ymax)
+    print("xminc,yminc",xmaxc,ymaxc)
     print("testx,testy",testx,testy)
-    """
+    
 
     matrix_map= []
     current_index = 0
@@ -240,7 +279,12 @@ def callback_map(map):
         current_index = counter * map_sizeY
         matrix_map.append(map.data[previous_index:current_index])
         previous_index = current_index
-
+    """
+    for i in range(xminc,xmaxc):
+        for j in range(yminc,ymaxc):
+            print int(matrix_map[i][j]),
+        print(" ")
+    """
 
     #map_division = np.zeros((xlen,ylen))	# (x,y)
     goals_to_reachx, goals_to_reachy=goals_points(xminc, xmaxc, yminc,ymaxc,  matrix_map, resolution, gridOriginX, gridOriginY)
@@ -252,10 +296,10 @@ def callback_map(map):
 
 #-------------------------------- ACTION_MOVE --------------------------
 
-#want to try and lift the head here (to see the objects well)
+#want to try and lift the head here (to see the objects well) NOT IMPLEMENTED
 def check_result(cli):
     #if (!cli.isActive())
-    return 0
+    return 1
 
 def move_action(destination_x,destination_y, poseX,poseY):
     global POS_TOLERANCE
@@ -291,7 +335,7 @@ def move_action(destination_x,destination_y, poseX,poseY):
     cli.send_goal(goal)
 
     # wait for the action server to complete the order
-    cli.wait_for_result()
+    cli.wait_for_result(rospy.Duration(180))#3min
 
     #the result send a number corresponding to success or failure or what happened. 4: path avorted (something similar) 3:ok 0:ok?
     #check_result(cli)
@@ -322,7 +366,7 @@ if __name__ == "__main__":
     #global endService
     global goals_to_reachx
     global goals_to_reachy
-    global begin_time
+    #global begin_time
     #global data_file
     #global room
     #global object_name
@@ -331,7 +375,7 @@ if __name__ == "__main__":
     pub_success = rospy.Publisher('object_pose',Point,queue_size=3)
     rospy.init_node('search_map_service', anonymous=True)
     sub= rospy.Subscriber("room_object", String, callback)
-    pub_job_done.publish(False) #once everything terminated, STOP
+    #pub_job_done.publish(False) #once everything terminated, STOP
 
     real_goal_position = Point()
     real_goal_position.x=0
@@ -346,19 +390,17 @@ if __name__ == "__main__":
     rospy.loginfo('Executing get goals to search room')
 
     #Testing purpose
-    """
-    Sunbul: subscribe to the speech topic to retrieve room and object name
-    to add here and change the find_goals_request.room by it
-    it will probably need to be as globl variables
-    """
 
 
     #room="kitchen"
     #object_name="teaspoon"
     #this callback gives back 2 arrays (x,y) of several goals to go to in the room/home
     #goals_to_reachx and y.
-
-    if endService== False:
+    #we wait for the subscriber to receive the object name and room
+    while object_name =='x' and STOP ==False:
+        pass
+    
+    if endService== False :
         sub= rospy.Subscriber('/map', OccupancyGrid, callback_map)
     while endService!=True:
         i=0
@@ -366,44 +408,45 @@ if __name__ == "__main__":
     #----------------- start move action ----------------------
     #print(response_goals)
 
-    rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message received
-
+    rospy.Timer(rospy.Duration(10), check_stop)#Check every 10s if time limit reached or stop message receive
     #we go from 1 position to the next
     for i in range(len(goals_to_reachx)):
         #This begin_time is used to ensure that after a delay the action is stopped
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
-
         #check sake
         print("next goal:",goals_to_reachx[i],goals_to_reachy[i])
         #check odom
         poseX,poseY, posew = odom.get()
         #send goal to move action
         response_move = move_action(goals_to_reachx[i],goals_to_reachy[i], poseX, poseY)
+        if STOP== True:
+            break
         turn()
-
 	#---------- check if object found ---------------------
 
-    M=[]
-    k=0
-    with open(data_file) as csvfile:
-            reader = csv.reader(csvfile) # change contents to floats
-            for row in reader: # each row is a list
-                M.append(row)
-    csvfile.close
+        M=[]
+        k=0
+        with open(data_file) as csvfile:
+                reader = csv.reader(csvfile) # change contents to floats
+                for row in reader: # each row is a list
+                    M.append(row)
+        csvfile.close
 
-    for i in range(1,len(M)):
-        if(object_name==M[i][0] and room==M[i][4]):
-            print("object found")
-            k=1
-
-            real_goal_position.x=M[i][1]
-            real_goal_position.y=M[i][2]
-            real_goal_position.z=M[i][3]
+        for i in range(1,len(M)):
+            if(object_name==M[i][0] and room==M[i][4]):
+                print("object found")
+                k=1
+                real_goal_position.x=M[i][1]
+                real_goal_position.y=M[i][2]
+                real_goal_position.z=M[i][3]
+                break
+        if(k==0):
+            print("object not found")
+        else: 
             break
-    if(k==0):
-        print("object not found")
-
-
+    #end of search map
+    print("real goal pose")
+    print(real_goal_position)
     pub_success.publish(real_goal_position) #to send the object coordinates
 
 
