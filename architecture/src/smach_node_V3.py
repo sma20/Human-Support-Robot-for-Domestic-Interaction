@@ -10,17 +10,6 @@ import smach
 import smach_ros
 import math as math
 import csv
-import time
-import os
-import sys
-import test
-import thread
-from threading import Thread
-from std_msgs.msg import String
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
-import cv2 
-import numpy as np 
 
 from architecture.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -29,11 +18,13 @@ from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 #roslaunch mapping path
-path_mapping="/home/cata/hsr_ws2/src/find_frontier/launch/find_front.launch"
+path_mapping="/home/orca01/catkin_ws/src/new/HSR-master/find_frontier/launch/find_front.launch"
 #roslaunch search_map path
-path_search_map="/home/cata/hsr_ws2/src/architecture/launch/search_map.launch"
+path_search_map="/home/orca01/catkin_ws/src/new/HSR-master/architecture/launch/search_map.launch"
 #path to the csv file containing objects and objects pose
-data_file="/home/cata/hsr_ws2/src/semantic_hsr/data/semantic_map.csv"
+data_file="/home/orca01/catkin_ws/src/new/HSR-master/semantic_hsr/data/semantic_map.csv"
+#path to the speech recognition file
+path_speech_reco="/home/orca01/catkin_ws/src/new/HSR-master/speech_reco/launch/speech_reco.launch"
 
 #--time check global var--
 begin_time=0
@@ -53,7 +44,9 @@ object_pose = Point()
 #------------------- TIME CHECK FCT ------------------------
 
 #Check the whole process time hasn't extended the maximum duration allowed
-
+#Sunbul: would be great to read the topic you created here to check if a "STOP" command was received to stop everything directly here
+#Daria: i did not implemented the stop command yet. its a tricky one. might have to make it a service and i dont know how to make google API a service.:D
+#This fct is not complete
 def check_stop(event):
 	global begin_time
 	global max_duration
@@ -89,23 +82,23 @@ def callback_stop(finish):
 #----- callback of search_map class (to receive information if the job is been finished or not)
 def callback_job_done(finished):
     global job_done
-    job_done= finished
+    job_done= finished.data
 	
 #----- callback of chatter, there to extract the action, object and room (if relevant)
-def callback_action(data):
-    print("in callback action")
+def callback_action(message):
     global name_object, action, place
     #execute actions
-    list = data.split(',')
+    #print(message)
+    list = message.data.split(',')
     name_object = list[0] 
     action = list[1] 
     place = list[2] 
 
-def callback_objectpose(data):
+def callback_objectpose(message):
     global object_pose
-    object_pose.x=data.x
-    object_pose.y=data.y
-    object_pose.z=data.z
+    object_pose.x=message.x
+    object_pose.y=message.y
+    object_pose.z=message.z
 
 
 #----------------------- ACTIONS machine class ----------------------------------
@@ -113,14 +106,14 @@ def callback_objectpose(data):
 #space for improvement, could replace the string by functions here (maybe to check if that is the wanted action)
 def switch_actions(action_choice):
     switcher={
-	    #it will send the numbers in a string now.
+	    #Have to check if i can put strings here. Else ask sunbul to send a number instead of the word (as a string, that won't be a problem to convert)
             1:'mapping',
             2:'get',
             3:'welcome', 
             #3:'find',
             #actions names
     }
-    result=switcher.get(action,"nothing")
+    result=switcher.get(int(action),"nothing")
     return result
     
 
@@ -132,27 +125,29 @@ class choose_actions(smach.State):
 
     def execute(self,userdata):
         global action
-        #action=2
-        print("choose action now")
-        #sunbul speech python script calls here
-        #thread1 = Thread(target=thread.callback,args=())
-        #thread1.start()
-        while action=='x':
-            rospy.sleep(2)
-        print(action)
-        print(name_object)
-
         
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [path_speech_reco])
+        launch.start()
 
-
-
-        #int(action)
-        choice=switch_actions(action)
+        #subul, here you can run your python script 
+        #get as a string the action, object, room (if pertinent)
+	
+	while action == 'x':
+	    rospy.Subscriber("chatter", String, callback_action)
+	
+	launch.shutdown()
+				
+        choice=switch_actions(int(action))
+	print(int(action))
+       
         return choice
 
 
 
-#This function is there to avoid repeating twice the same action once the action finished.
+#This function is there to avoid repeating twice the same action once the action finished. Before going to choose_action, we clean the global variables. 
+#We could also run a script asking if we want to shut-down hsr or issue a new command. (but that would be for you to do Sunbul)
 class reset(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['rebooted']) #we could add a clean stop of the hsr here
@@ -287,7 +282,7 @@ class retrieve_position_object(smach.State):
 #call a launch to start this service. code too long, i wanted this py to be reserved for calling fct. to gives lisibility
 #SEARCH_MAP.launch /search_map.py and map_exploration_service_v2.py -
 #Search goals in the room/home and then send it to the move action.
-#Brieuc read "search_map.py" , there is something for you there (retrieve room info + csv file search or yolo check)
+#Brieuc, Sunbul: read "search_map.py" , there is something for you there (retrieve room info + csv file search or yolo check)
 
 #input: nonne
 #output:nonne 
@@ -426,122 +421,13 @@ class move(smach.State):
 #Inputs:
 #Outputs:
 class check(smach.State):
-   def __init__(self):
+    def __init__(self):
         smach.State.__init__(self, outcomes=['person_recognized','person_not_recognized'])
-    	self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size=1)
-	self.person_pub = rospy.Publisher("person_detected",String, queue_size=1)
-	self.bridge = CvBridge()
-	self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.execute) #/usb_cam/image_raw
     
-    def find(self,person,img):
-		detected=0
-		hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)#passing the image in hsv
-		lower_range,upper_range = person#loading the value for the mask
-		mask = cv2.inRange(hsv, lower_range, upper_range)#creating the mask
-		#this block is the filtering part
-		cv_imageF = cv2.medianBlur(mask,5)
-		
-		k_erosion = np.ones((4,4),np.uint8)
-		
-		cv_imageF = cv2.dilate(cv_imageF,k_erosion, iterations=2)
-		
-	
-		#cv2.imshow('mask', cv_imageF)
-		detection_mask = np.sum(mask)
-		if detection_mask > 2800000:
-    			#print('detected!')
-			detected =1
-		
-		#print(detection_mask)
-			
-		
-		#cv2.imshow('image', img)
-		return detected,detection_mask #return the number of ellipse found and their size
-	
+    
     def execute(self,userdata):
 
-        	nb_color=[0,0,0,0]
-		try:
-			cv_image = self.bridge.imgmsg_to_cv2(userdata, "bgr8")#get the image of the robot
-			
-		except CvBridgeError as e:
-			print(e)
-
-
-		detected_postman,nb_color[0] = self.find(self.postman(),cv_image)
-		detected_doctor,nb_color[1] = self.find(self.doctor(),cv_image)
-		detected_plomber,nb_color[2] = self.find(self.plomber(),cv_image)
-		detected_deli_man,nb_color[3] = self.find(self.deli_man(),cv_image)		
-		
-
-		i=0
-		u=0
-		dominant_color=nb_color[0]
-		for i in range(0,4):
-			
-			if nb_color[i]>dominant_color:
-				dominant_color=nb_color[i]
-				u=i
-			
-		person="unknown"
-		
-
-		if detected_postman==1 and nb_color[0]==dominant_color:
-			person="postman"
-		elif detected_doctor==1 and nb_color[1]==dominant_color:
-			person="doctor"
-		elif detected_plomber==1 and nb_color[2]==dominant_color:
-			person="plomber"
-		elif detected_deli_man==1 and nb_color[3]==dominant_color:
-			person="deli_man"
-
-		
-		#print("the person is : ",person,"dominant color : ",u,i)
-		#print("detected : ",detected_postman,detected_doctor, detected_plomber,detected_deli_man   )
-		#cv2.waitKey(3)
-		try:
-			self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
-			self.person_pub.publish(person)
-		except CvBridgeError as e:
-			print(e)
-		if person=="unknown":
-			result='person_not_recognized'
-		else :
-			result='person_recognized'
-		return result
-
-    def postman(self):
-	#Blue
-		lower_range = np.array([80,90,100])
-		upper_range = np.array([150,250,250])
-
-	
-		return lower_range, upper_range
-
-    def doctor(self):
-
-	#red
-		lower_range = np.array([150,90,100])
-		upper_range = np.array([250,250,250])
-	
-		return lower_range, upper_range
-
-    def plomber(self):
-	#Yellow
-		lower_range = np.array([0,90,100])
-		upper_range = np.array([70,250,250])
-
-	
-		return lower_range, upper_range
-
-    def deli_man(self):
-	#Yellow
-		lower_range = np.array([0,20,180])
-		upper_range = np.array([255,255,255])
-
-	
-		return lower_range, upper_range
-
+        return 'person_recognized'
 #----------------------------- END SUB_WELCOME CLASS ------------------------------------------
 
 
@@ -594,7 +480,6 @@ class mapping(smach.State):
 def main():
     rospy.init_node('smach_example_state_machine')
     print("first_smach_on")
-    rospy.Subscriber("chatter", String, callback_action)#get as a string the action, object, room (if pertinent)
     sub = rospy.Subscriber('job_done', Bool, callback_job_done)
     #rospy.Subscriber("chatter", String, callback_action) #get as a string the action, object, room (if pertinent)
     rospy.Subscriber("chatter1", String, callback_stop) #receive the stop or ultra stop here to stop what is ongoing or everything.
@@ -665,6 +550,8 @@ def main():
 
 #---------------------------- WELCOME State Machine ---------------------------------
 
+
+#Brieuc, Sunbul: in this new class you will have to enter your functions here
 # Or if you don't succeed tell me your combined strategy if you want me to add it here.
 
         with sm_welcome:
@@ -684,6 +571,7 @@ def main():
 
             #ADD YOUR STATE MACHINE FCTS
 
+            #Brieuc, Sunbul, you are the one that can do this part of the archi.
 
 
 #---------------------------- END WELCOME State Machine -----------------------------
@@ -715,3 +603,4 @@ def main():
 if __name__ == '__main__':
     main()
     rospy.spin()
+action=2
