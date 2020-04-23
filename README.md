@@ -167,7 +167,11 @@ In order to try YOLO you need to do the following:
 - do : ```bash python get_3d_position.py ```
 - do : ```bash python csv_writer.py ```
 
-
+in order to change the camera use by the robot, you will have to change it in the launch file : hsrb_tk1_tutorials/hsrb_darknet_tutorials/launch/default_model_demo.launch
+in this launch file you will have to change the line :
+``` bash <remap from="~image" to="/usb_cam/image_raw" /> ```
+by : ``` bash <remap from="~image" to="/hsrb/head_rgbd_sensor/rgb/image_rect_color" /> ``` 
+/hsrb/head_rgbd_sensor/rgb/image_rect_color is an example, you can use the camera that you want.
 
 ## Launch
 
