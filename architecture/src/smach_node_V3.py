@@ -16,6 +16,11 @@ import sys
 import test
 import thread
 from threading import Thread
+from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import cv2 
+import numpy as np 
 
 from architecture.srv import *
 from geometry_msgs.msg import Twist, Point,  PoseStamped,  Quaternion
@@ -421,13 +426,122 @@ class move(smach.State):
 #Inputs:
 #Outputs:
 class check(smach.State):
-    def __init__(self):
+   def __init__(self):
         smach.State.__init__(self, outcomes=['person_recognized','person_not_recognized'])
+    	self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size=1)
+	self.person_pub = rospy.Publisher("person_detected",String, queue_size=1)
+	self.bridge = CvBridge()
+	self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.execute) #/usb_cam/image_raw
     
-    
+    def find(self,person,img):
+		detected=0
+		hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)#passing the image in hsv
+		lower_range,upper_range = person#loading the value for the mask
+		mask = cv2.inRange(hsv, lower_range, upper_range)#creating the mask
+		#this block is the filtering part
+		cv_imageF = cv2.medianBlur(mask,5)
+		
+		k_erosion = np.ones((4,4),np.uint8)
+		
+		cv_imageF = cv2.dilate(cv_imageF,k_erosion, iterations=2)
+		
+	
+		#cv2.imshow('mask', cv_imageF)
+		detection_mask = np.sum(mask)
+		if detection_mask > 2800000:
+    			#print('detected!')
+			detected =1
+		
+		#print(detection_mask)
+			
+		
+		#cv2.imshow('image', img)
+		return detected,detection_mask #return the number of ellipse found and their size
+	
     def execute(self,userdata):
 
-        return 'person_recognized'
+        	nb_color=[0,0,0,0]
+		try:
+			cv_image = self.bridge.imgmsg_to_cv2(userdata, "bgr8")#get the image of the robot
+			
+		except CvBridgeError as e:
+			print(e)
+
+
+		detected_postman,nb_color[0] = self.find(self.postman(),cv_image)
+		detected_doctor,nb_color[1] = self.find(self.doctor(),cv_image)
+		detected_plomber,nb_color[2] = self.find(self.plomber(),cv_image)
+		detected_deli_man,nb_color[3] = self.find(self.deli_man(),cv_image)		
+		
+
+		i=0
+		u=0
+		dominant_color=nb_color[0]
+		for i in range(0,4):
+			
+			if nb_color[i]>dominant_color:
+				dominant_color=nb_color[i]
+				u=i
+			
+		person="unknown"
+		
+
+		if detected_postman==1 and nb_color[0]==dominant_color:
+			person="postman"
+		elif detected_doctor==1 and nb_color[1]==dominant_color:
+			person="doctor"
+		elif detected_plomber==1 and nb_color[2]==dominant_color:
+			person="plomber"
+		elif detected_deli_man==1 and nb_color[3]==dominant_color:
+			person="deli_man"
+
+		
+		#print("the person is : ",person,"dominant color : ",u,i)
+		#print("detected : ",detected_postman,detected_doctor, detected_plomber,detected_deli_man   )
+		#cv2.waitKey(3)
+		try:
+			self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+			self.person_pub.publish(person)
+		except CvBridgeError as e:
+			print(e)
+		if person=="unknown":
+			result='person_not_recognized'
+		else :
+			result='person_recognized'
+		return result
+
+    def postman(self):
+	#Blue
+		lower_range = np.array([80,90,100])
+		upper_range = np.array([150,250,250])
+
+	
+		return lower_range, upper_range
+
+    def doctor(self):
+
+	#red
+		lower_range = np.array([150,90,100])
+		upper_range = np.array([250,250,250])
+	
+		return lower_range, upper_range
+
+    def plomber(self):
+	#Yellow
+		lower_range = np.array([0,90,100])
+		upper_range = np.array([70,250,250])
+
+	
+		return lower_range, upper_range
+
+    def deli_man(self):
+	#Yellow
+		lower_range = np.array([0,20,180])
+		upper_range = np.array([255,255,255])
+
+	
+		return lower_range, upper_range
+
 #----------------------------- END SUB_WELCOME CLASS ------------------------------------------
 
 
