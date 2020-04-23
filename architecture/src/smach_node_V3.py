@@ -432,8 +432,11 @@ class check(smach.State):
     	self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size=1)
 	self.person_pub = rospy.Publisher("person_detected",String, queue_size=1)
 	self.bridge = CvBridge()
-	self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.execute) #/usb_cam/image_raw
-    
+    def execute(self, userdata):
+	global result_person
+	self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.callback_image) #/usb_cam/image_raw
+    	return result_person
+
     def find(self,person,img):
 		detected=0
 		hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)#passing the image in hsv
@@ -453,14 +456,10 @@ class check(smach.State):
     			#print('detected!')
 			detected =1
 		
-		#print(detection_mask)
-			
-		
-		#cv2.imshow('image', img)
-		return detected,detection_mask #return the number of ellipse found and their size
+		return detected,detection_mask 
 	
-    def execute(self,userdata):
-
+    def callback_image(self,userdata):
+		global result_person
         	nb_color=[0,0,0,0]
 		try:
 			cv_image = self.bridge.imgmsg_to_cv2(userdata, "bgr8")#get the image of the robot
@@ -497,19 +496,16 @@ class check(smach.State):
 			person="deli_man"
 
 		
-		#print("the person is : ",person,"dominant color : ",u,i)
-		#print("detected : ",detected_postman,detected_doctor, detected_plomber,detected_deli_man   )
-		#cv2.waitKey(3)
 		try:
 			self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
 			self.person_pub.publish(person)
 		except CvBridgeError as e:
 			print(e)
 		if person=="unknown":
-			result='person_not_recognized'
+			result_person='person_not_recognized'
 		else :
-			result='person_recognized'
-		return result
+			result_person='person_recognized'
+		
 
     def postman(self):
 	#Blue
