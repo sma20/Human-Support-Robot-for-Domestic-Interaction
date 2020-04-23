@@ -317,13 +317,13 @@ class search_map(smach.State):
         launch = roslaunch.parent.ROSLaunchParent(uuid, [path_search_map])  
         launch.start()
 
-        pub2.publish(object_room)
+        
         rospy.loginfo("started")
         begin_time = (rospy.Time.from_sec(time.time())).to_sec()
 
         #while delay not expired or the search isn't finished
         while STOP==False and job_done==False:
-            i=0
+            pub2.publish(object_room)
         #rospy.sleep(60*5)
         # 5min later
         rospy.loginfo("CLOOOOSE SEARCH_MAP LAUNCH")
