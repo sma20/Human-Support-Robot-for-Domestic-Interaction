@@ -248,6 +248,7 @@ def callback_map(map):
             ymin=float(angles[i][3])
             ymax=float(angles[i][4])
             print("xmin,max,ymin,max", xmin, xmax, ymin, ymax)
+	    break
     if k!=1:
         print ("we couldn't find the specified room, let's explore the whole home")
         #Home coordinates
@@ -260,12 +261,13 @@ def callback_map(map):
     xminc,yminc=convertPointToCell(xmin,ymin, gridOriginX, gridOriginY, resolution)
     xmaxc,ymaxc=convertPointToCell(xmax,ymax, gridOriginX, gridOriginY, resolution)
     
-    
+    """
     testx,testy=convertCellToPoint(xmaxc,ymaxc, cellOriginX, cellOriginY, resolution)
 
     print("xmin,ymin",xmax,ymax)
     print("xminc,yminc",xmaxc,ymaxc)
     print("testx,testy",testx,testy)
+    """
     
 
     matrix_map= []
