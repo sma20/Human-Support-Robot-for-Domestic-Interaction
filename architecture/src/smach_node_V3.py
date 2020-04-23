@@ -47,6 +47,9 @@ place= "x"
 
 #--to retrieve object pose from search map launch
 object_pose = Point() 
+
+#--to retrieve if a person is recognized
+result_person='person_not_recognized'
 #------------------- TIME CHECK FCT ------------------------
 
 #Check the whole process time hasn't extended the maximum duration allowed
@@ -434,9 +437,9 @@ class check(smach.State):
 	self.bridge = CvBridge()
     def execute(self, userdata):
 	global result_person
-	self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.callback_image) #/usb_cam/image_raw
+	#self.image_sub = rospy.Subscriber("/hsrb/head_rgbd_sensor/rgb/image_rect_color",Image,self.callback_image) #/usb_cam/image_raw
     	return result_person
-
+    """
     def find(self,person,img):
 		detected=0
 		hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)#passing the image in hsv
@@ -535,9 +538,9 @@ class check(smach.State):
 	#Yellow
 		lower_range = np.array([0,20,180])
 		upper_range = np.array([255,255,255])
-
 	
 		return lower_range, upper_range
+    """
 #----------------------------- END SUB_WELCOME CLASS ------------------------------------------
 
 
